@@ -1,47 +1,76 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import {
+  ArrowRight, Heart, Menu, Minus, Package, Search, ShoppingBag, Sparkles, UserRound, X, Zap,
+} from 'lucide-react'
+
+type Product = { id:number; name:string; category:string; price:number; oldPrice?:number; color:string; image:string; badge?:string; description:string }
+
+const initialProducts: Product[] = [
+  { id:1, name:'Vestido Floral de Verano', category:'Ropa', price:89.99, oldPrice:119.99, color:'Coral', badge:'-25%', image:'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=85', description:'Vestido liviano y fresco, perfecto para días de verano.' },
+  { id:2, name:'Vestido Negro Evening', category:'Ropa', price:149.99, color:'Negro', badge:'Nuevo', image:'https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=900&q=85', description:'Silueta sofisticada y caída fluida para ocasiones especiales.' },
+  { id:3, name:'Collar Inicial Dorado', category:'Joyería', price:39.99, color:'Dorado', image:'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=900&q=85', description:'Un detalle delicado para llevar tu estilo a todas partes.' },
+  { id:4, name:'Cartera Mini Signature', category:'Bolsos', price:74.99, oldPrice:94.99, color:'Rojo', badge:'-20%', image:'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=85', description:'Compacta, práctica y lista para acompañarte de noche.' },
+  { id:5, name:'Set Casual Weekend', category:'Ropa', price:119.99, color:'Beige', image:'https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=900&q=85', description:'La combinación relajada que vas a usar una y otra vez.' },
+  { id:6, name:'Aros Luna Plateados', category:'Joyería', price:29.99, color:'Plateado', image:'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=900&q=85', description:'Aros livianos con brillo sutil para todos los días.' },
+]
+
 export default function Page() {
-  return (
-    <main
-      style={{
-        colorScheme: 'light dark',
-        position: 'relative',
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'light-dark(#fff, #000)',
-        color: 'light-dark(#000, #fff)',
-      }}
-    >
-      <svg
-        aria-hidden="true"
-        style={{ width: 80, height: 80 }}
-        width={80}
-        height={80}
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <p
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 'calc(50% + 56px)',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          fontSize: '14px',
-          fontWeight: 500,
-          color: 'light-dark(#71717a, #a1a1aa)',
-        }}
-      >
-        Your v0 generation will show here.
-      </p>
-    </main>
-  )
+  const [products, setProducts] = useState(initialProducts)
+  const [cart, setCart] = useState<number[]>([])
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('Todos')
+  const [cartOpen, setCartOpen] = useState(false)
+  const [admin, setAdmin] = useState(false)
+  const [logged, setLogged] = useState(false)
+  const [login, setLogin] = useState(false)
+  const [notice, setNotice] = useState('')
+
+  const filtered = useMemo(() => products.filter(p => (category === 'Todos' || p.category === category) && p.name.toLowerCase().includes(search.toLowerCase())), [products, category, search])
+  const cartProducts = cart.map(id => products.find(p => p.id === id)).filter(Boolean) as Product[]
+  const total = cartProducts.reduce((sum, p) => sum + p.price, 0)
+
+  const add = (id:number) => { setCart(c => [...c, id]); setNotice('Producto agregado al carrito'); setTimeout(() => setNotice(''), 2000) }
+  const remove = (id:number) => setCart(c => { const i = c.indexOf(id); return i < 0 ? c : [...c.slice(0,i), ...c.slice(i+1)] })
+  const whatsapp = () => {
+    const text = `Hola Bella Boutique! Quiero hacer este pedido:\n\n${cartProducts.map(p => `• ${p.name} — $${p.price.toFixed(2)}`).join('\n')}\n\nTotal estimado: $${total.toFixed(2)}\n\nMis datos de entrega:\nNombre: \nDirección: \nTeléfono: `
+    window.open(`https://wa.me/5491100000000?text=${encodeURIComponent(text)}`, '_blank')
+  }
+  const saveProduct = (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); const data = new FormData(e.currentTarget); const next:Product = { id:Date.now(), name:String(data.get('name')), category:String(data.get('category')), price:Number(data.get('price')), color:'Nuevo', image:String(data.get('image')) || initialProducts[0].image, description:String(data.get('description')) || 'Producto agregado desde el panel.' }; setProducts(p => [next, ...p]); e.currentTarget.reset() }
+
+  return <main className="min-h-screen bg-background text-foreground">
+    {notice && <div className="fixed top-5 left-1/2 z-50 -translate-x-1/2 rounded-full bg-foreground px-5 py-3 text-sm text-background shadow-xl">{notice}</div>}
+    <div className="bg-foreground px-4 py-2 text-center text-xs tracking-wide text-background">Envío gratis en pedidos superiores a $75 · Nuevos ingresos cada semana</div>
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/95 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center gap-5 px-5 py-5">
+        <button className="md:hidden" aria-label="Abrir menú"><Menu size={21}/></button>
+        <a href="#inicio" className="mr-auto text-2xl font-bold tracking-tight text-primary">Bella Boutique</a>
+        <nav className="hidden items-center gap-7 text-sm font-medium md:flex"><a href="#catalogo">Novedades</a><a href="#catalogo">Ropa</a><a href="#catalogo">Bolsos</a><a href="#catalogo">Joyería</a></nav>
+        <div className="hidden items-center gap-3 md:flex"><div className="flex w-52 items-center gap-2 rounded-full border border-border bg-muted/50 px-3 py-2"><Search size={16} className="text-muted-foreground"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar productos..." className="w-full bg-transparent text-xs outline-none"/></div><button aria-label="Cuenta" onClick={()=>setLogin(true)}><UserRound size={20}/></button></div>
+        <button aria-label="Carrito" className="relative" onClick={()=>setCartOpen(true)}><ShoppingBag size={21}/>{cart.length>0 && <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{cart.length}</span>}</button>
+      </div>
+      <div className="flex gap-2 overflow-x-auto border-t border-border/50 px-5 py-3 md:hidden"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar productos..." className="min-w-0 flex-1 rounded-full border bg-muted/50 px-4 py-2 text-sm outline-none"/></div>
+    </header>
+
+    <section id="inicio" className="bg-[linear-gradient(110deg,#fff0f8_0%,#fff8fc_46%,#e9ecff_100%)]"><div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-16 md:grid-cols-2 md:py-24"><div><p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-primary">Colección tendencia</p><h1 className="max-w-xl text-balance text-5xl font-black leading-[0.98] tracking-tight md:text-7xl">Moda que <span className="text-primary">inspira</span> tu estilo.</h1><p className="mt-6 max-w-lg text-lg leading-8 text-muted-foreground">Descubrí las últimas tendencias en ropa, bolsos y accesorios pensados para hacerte sentir única.</p><div className="mt-8 flex flex-wrap gap-3"><a href="#catalogo" className="inline-flex items-center gap-3 rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground">Comprar ahora <ArrowRight size={18}/></a><a href="#colecciones" className="rounded-xl border border-border bg-background px-6 py-3 font-semibold">Ver lookbook</a></div></div><div className="relative"><img src="https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=1000&q=85" alt="Modelo usando la nueva colección" className="h-[390px] w-full rounded-[2rem] object-cover shadow-2xl md:h-[470px]"/><div className="absolute bottom-5 left-5 rounded-xl bg-background/90 px-4 py-3 text-sm font-medium shadow-lg"><Sparkles size={15} className="mr-2 inline text-primary"/>Nueva colección</div></div></div></section>
+
+    <section id="colecciones" className="mx-auto max-w-6xl px-5 py-14"><div className="grid gap-5 md:grid-cols-3"><Collection title="Para ellas" copy="Hasta 40% off" image="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=700&q=85"/><Collection title="Bolsos y más" copy="Tu nuevo favorito" image="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=700&q=85"/><Collection title="Joyería" copy="Pequeños detalles" image="https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=700&q=85"/></div></section>
+
+    <section id="catalogo" className="bg-muted/35 px-5 py-16"><div className="mx-auto max-w-6xl"><div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Elegidos para vos</p><h2 className="mt-2 text-4xl font-bold tracking-tight">Nuevos ingresos</h2></div><div className="flex items-center gap-2 overflow-x-auto">{['Todos','Ropa','Bolsos','Joyería'].map(c=><button key={c} onClick={()=>setCategory(c)} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm ${category===c?'bg-primary text-primary-foreground':'bg-background border border-border'}`}>{c}</button>)}</div></div><div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{filtered.map(p=><ProductCard key={p.id} product={p} add={add}/>)}</div></div></section>
+
+    <section className="mx-auto grid max-w-6xl gap-8 px-5 py-16 sm:grid-cols-3">{[['Envío gratis','En compras superiores a $75',Package],['Compra simple','Coordinamos tu pedido por WhatsApp',Zap],['Atención cercana','Te ayudamos a elegir tu look',Heart]].map(([title,copy,Icon])=><div key={String(title)} className="text-center"><div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary"><Icon size={24}/></div><h3 className="font-bold">{String(title)}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{String(copy)}</p></div>)}</section>
+
+    <section className="bg-foreground px-5 py-16 text-center text-background"><h2 className="text-3xl font-bold">Quedate en estilo</h2><p className="mx-auto mt-3 max-w-xl text-background/65">Suscribite para enterarte primero de nuevos ingresos y ofertas especiales.</p><form className="mx-auto mt-7 flex max-w-md gap-2" onSubmit={e=>{e.preventDefault();setNotice('Gracias por suscribirte')}}><input required type="email" placeholder="Tu email" className="min-w-0 flex-1 rounded-xl border border-background/15 bg-background/10 px-4 py-3 outline-none placeholder:text-background/45"/><button className="rounded-xl bg-primary px-5 font-semibold text-primary-foreground">Suscribirme</button></form></section>
+    <footer className="bg-foreground px-5 pb-10 text-background"><div className="mx-auto flex max-w-6xl flex-col justify-between gap-5 border-t border-background/10 pt-8 text-sm text-background/60 md:flex-row"><div><p className="text-xl font-bold text-primary">Bella Boutique</p><p className="mt-2">Moda para sentirte vos.</p></div><div className="flex gap-5"><Heart size={18}/><span>hola@bellaboutique.com</span></div><button className="text-primary" onClick={()=>setAdmin(true)}>Acceso administración</button></div></footer>
+
+    {cartOpen && <Cart items={cartProducts} total={total} remove={remove} close={()=>setCartOpen(false)} whatsapp={whatsapp}/>} {login && <Login close={()=>setLogin(false)} onLogin={()=>{setLogged(true);setLogin(false);setAdmin(true)}}/>} {admin && <Admin products={products} logged={logged} close={()=>setAdmin(false)} save={saveProduct} remove={id=>setProducts(p=>p.filter(x=>x.id!==id))} login={()=>setLogin(true)}/>} 
+  </main>
 }
+
+function Collection({title,copy,image}:{title:string;copy:string;image:string}) { return <a href="#catalogo" className="group relative h-48 overflow-hidden rounded-2xl"><img src={image} alt={title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/><div className="absolute inset-0 bg-gradient-to-r from-foreground/70 to-transparent p-6 text-background"><h3 className="text-2xl font-bold">{title}</h3><p className="mt-1 text-sm text-background/80">{copy}</p><span className="mt-5 inline-block rounded-full bg-background px-3 py-1 text-xs font-semibold text-foreground">Ver colección</span></div></a> }
+function ProductCard({product,add}:{product:Product;add:(id:number)=>void}) { return <article className="group overflow-hidden rounded-2xl border border-border bg-background"><div className="relative h-72 overflow-hidden"><img src={product.image} alt={product.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/>{product.badge&&<span className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold ${product.badge==='Nuevo'?'bg-emerald-500 text-white':'bg-primary text-primary-foreground'}`}>{product.badge}</span>}<button onClick={()=>add(product.id)} className="absolute bottom-3 left-3 right-3 rounded-xl bg-background/95 py-3 text-sm font-semibold opacity-0 shadow-lg transition group-hover:opacity-100">Agregar al carrito</button></div><div className="p-5"><p className="text-xs uppercase tracking-wider text-muted-foreground">{product.category}</p><h3 className="mt-1 font-bold">{product.name}</h3><p className="mt-2 line-clamp-1 text-sm text-muted-foreground">{product.description}</p><div className="mt-4 flex items-center gap-2"><span className="text-lg font-bold">${product.price.toFixed(2)}</span>{product.oldPrice&&<del className="text-sm text-muted-foreground">${product.oldPrice.toFixed(2)}</del>}</div></div></article> }
+function Overlay({children,close}:{children:React.ReactNode;close:()=>void}) { return <div className="fixed inset-0 z-40 bg-foreground/40 p-4" onClick={close}><div onClick={e=>e.stopPropagation()} className="mx-auto mt-8 max-h-[90vh] max-w-lg overflow-auto rounded-2xl bg-background p-6 shadow-2xl">{children}</div></div> }
+function Cart({items,total,remove,close,whatsapp}:{items:Product[];total:number;remove:(id:number)=>void;close:()=>void;whatsapp:()=>void}) { return <Overlay close={close}><div className="flex items-center justify-between"><h2 className="text-2xl font-bold">Tu carrito</h2><button onClick={close}><X/></button></div>{items.length===0?<p className="py-12 text-center text-muted-foreground">Todavía no agregaste productos.</p>:<><div className="mt-6 space-y-4">{items.map(p=><div className="flex items-center gap-3" key={p.id}><img src={p.image} alt="" className="h-16 w-16 rounded-lg object-cover"/><div className="min-w-0 flex-1"><p className="truncate font-semibold">{p.name}</p><p className="text-sm text-muted-foreground">${p.price.toFixed(2)}</p></div><button onClick={()=>remove(p.id)} className="text-muted-foreground"><Minus size={16}/></button></div>)}</div><div className="mt-7 flex justify-between border-t pt-5 text-lg font-bold"><span>Total estimado</span><span>${total.toFixed(2)}</span></div><button onClick={whatsapp} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3 font-bold text-white">Confirmar por WhatsApp <ArrowRight size={18}/></button><p className="mt-3 text-center text-xs text-muted-foreground">No se realizan pagos online. Coordinamos el resto por WhatsApp.</p></>}</Overlay> }
+function Login({close,onLogin}:{close:()=>void;onLogin:()=>void}) { return <Overlay close={close}><div className="flex justify-between"><h2 className="text-2xl font-bold">Acceso admin</h2><button onClick={close}><X/></button></div><p className="mt-2 text-sm text-muted-foreground">Demo: usá cualquier email y contraseña.</p><form className="mt-6 space-y-4" onSubmit={e=>{e.preventDefault();onLogin()}}><input required type="email" placeholder="Email" className="w-full rounded-xl border bg-muted/30 px-4 py-3 outline-none"/><input required type="password" placeholder="Contraseña" className="w-full rounded-xl border bg-muted/30 px-4 py-3 outline-none"/><button className="w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground">Entrar al panel</button></form></Overlay> }
+function Admin({products,logged,close,save,remove,login}:{products:Product[];logged:boolean;close:()=>void;save:(e:React.FormEvent<HTMLFormElement>)=>void;remove:(id:number)=>void;login:()=>void}) { return <Overlay close={close}>{!logged?<div className="text-center"><h2 className="text-2xl font-bold">Panel de administración</h2><p className="mt-3 text-muted-foreground">Ingresá para administrar tus productos.</p><button onClick={login} className="mt-6 rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground">Iniciar sesión</button></div>:<><div className="flex items-center justify-between"><div><p className="text-xs uppercase tracking-widest text-primary">Modo admin</p><h2 className="text-2xl font-bold">Gestionar catálogo</h2></div><button onClick={close}><X/></button></div><form onSubmit={save} className="mt-6 grid gap-3"><input required name="name" placeholder="Nombre del producto" className="rounded-xl border px-4 py-3"/><select name="category" className="rounded-xl border px-4 py-3"><option>Ropa</option><option>Bolsos</option><option>Joyería</option></select><input required name="price" type="number" step="0.01" placeholder="Precio" className="rounded-xl border px-4 py-3"/><input name="image" placeholder="URL de imagen" className="rounded-xl border px-4 py-3"/><textarea name="description" placeholder="Descripción" className="rounded-xl border px-4 py-3"/><button className="rounded-xl bg-primary py-3 font-semibold text-primary-foreground">+ Agregar producto</button></form><div className="mt-8 space-y-3"><h3 className="font-bold">Productos activos ({products.length})</h3>{products.map(p=><div key={p.id} className="flex items-center gap-3 border-t pt-3"><img src={p.image} alt="" className="h-10 w-10 rounded object-cover"/><span className="flex-1 truncate text-sm">{p.name}</span><button onClick={()=>remove(p.id)} className="text-xs text-destructive">Eliminar</button></div>)}</div></>}</Overlay> }
