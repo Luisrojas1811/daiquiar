@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Bella Boutique · Moda que inspira',
-  description: 'Descubrí ropa, bolsos y accesorios seleccionados para expresar tu estilo.',
+  title: 'Daiquiar Indumentaria · Lencería y moda femenina',
+  description: 'Lencería e indumentaria femenina seleccionada con amor, con envíos a todo el país.',
   generator: 'v0.app',
   icons: {
     icon: [

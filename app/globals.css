@@ -25,7 +25,7 @@
   --radius-xl: calc(var(--radius) * 1.4);
 }
 
-:root { color-scheme: light; --background: oklch(0.99 0.005 330); --foreground: oklch(0.17 0.03 275); --card: oklch(1 0 0); --card-foreground: oklch(0.17 0.03 275); --popover: oklch(1 0 0); --popover-foreground: oklch(0.17 0.03 275); --primary: oklch(0.68 0.23 345); --primary-foreground: oklch(1 0 0); --muted: oklch(0.96 0.015 330); --muted-foreground: oklch(0.45 0.03 275); --border: oklch(0.9 0.02 330); --input: oklch(0.9 0.02 330); --ring: oklch(0.68 0.23 345); --destructive: oklch(0.58 0.22 25); --radius: 0.75rem; }
+:root { color-scheme: light; --background: oklch(0.97 0.018 67); --foreground: oklch(0.22 0.04 25); --card: oklch(0.99 0.01 67); --card-foreground: oklch(0.22 0.04 25); --popover: oklch(0.99 0.01 67); --popover-foreground: oklch(0.22 0.04 25); --primary: oklch(0.38 0.16 20); --primary-foreground: oklch(0.98 0.01 67); --muted: oklch(0.92 0.04 55); --muted-foreground: oklch(0.43 0.06 30); --border: oklch(0.84 0.05 55); --input: oklch(0.84 0.05 55); --ring: oklch(0.38 0.16 20); --destructive: oklch(0.58 0.22 25); --radius: 0.75rem; }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: var(--background); }
