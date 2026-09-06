@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Daiquiar Indumentaria · Lencería y moda femenina',
-  description: 'Lencería e indumentaria femenina seleccionada con amor, con envíos a todo el país.',
+  title: 'Daiquiar Indumentaria · Moda femenina',
+  description: 'Indumentaria femenina seleccionada con amor, con envíos a todo el país.',
   generator: 'v0.app',
   icons: {
     icon: [
