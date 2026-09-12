@@ -35,6 +35,8 @@ export default function AdminPage() {
 
   function updateStock(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const id = Number(data.get('productId')); const stock = Math.max(0, Number(data.get('stock'))); setProducts(current => current.map(product => product.id === id ? { ...product, stock } : product)); setMessage('Stock actualizado'); }
 
+  function updateAllStock(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); setProducts(current => current.map(product => ({ ...product, stock: Math.max(0, Number(data.get(`stock-${product.id}`)) || 0) }))); setMessage('Stock de todos los productos actualizado'); }
+
   function addProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
