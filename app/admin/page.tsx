@@ -8,6 +8,10 @@ type AdminProduct = { id: number; name: string; category: string; price: number;
 const demoProducts: AdminProduct[] = [
   { id: 1, name: 'Body Negro Escote V', category: 'Bodies', price: 24990, image: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=180&q=80', stock: 2, lowStockThreshold: 3 },
   { id: 2, name: 'Catsuit Negro Manga Larga', category: 'Catsuits', price: 38990, image: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=180&q=80', stock: 8, lowStockThreshold: 3 },
+  { id: 3, name: 'Musculosa Básica Bordó', category: 'Conjuntos', price: 16990, image: 'https://images.unsplash.com/photo-1564257577054-3e2b7c1b5f3b?auto=format&fit=crop&w=180&q=80', stock: 5, lowStockThreshold: 3 },
+  { id: 4, name: 'Conjunto Cut Out', category: 'Conjuntos', price: 42990, image: 'https://images.unsplash.com/photo-1506629905607-d9f3bb9f7b36?auto=format&fit=crop&w=180&q=80', stock: 2, lowStockThreshold: 3 },
+  { id: 5, name: 'Body Manga Larga', category: 'Bodies', price: 27990, image: 'https://images.unsplash.com/photo-1618244972963-dbee1a7edc95?auto=format&fit=crop&w=180&q=80', stock: 8, lowStockThreshold: 3 },
+  { id: 6, name: 'Top Corset Bordó', category: 'Conjuntos', price: 22990, image: 'https://images.unsplash.com/photo-1605763240000-7e93b172d754?auto=format&fit=crop&w=180&q=80', stock: 2, lowStockThreshold: 3 },
 ]
 
 export default function AdminPage() {
