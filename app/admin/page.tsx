@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useState } from 'react'
 import { ArrowLeft, LockKeyhole, Plus, Trash2 } from 'lucide-react'
 
 type AdminProduct = { id: number; name: string; category: string; price: number; image: string; stock: number; lowStockThreshold: number }
@@ -21,6 +21,8 @@ export default function AdminPage() {
   const [message, setMessage] = useState('')
   const [copy, setCopy] = useState({ title: 'Moda que inspira tu estilo.', description: 'Indumentaria femenina seleccionada con amor. Diseños únicos, calidad y envíos a todo el país.', footer: 'HEY BBY! Somos Daiquiar. Diseño y calidad a precios únicos. CABA, Buenos Aires. Envíos a todo el país.', whatsapp: '5491100000000', shippingThreshold: 75000, correoArgentinoUrl: 'https://www.correoargentino.com.ar/formularios/cpa', benefits: [{ title: 'Envío gratis', description: 'En compras superiores a $75.000' }, { title: 'Compra simple', description: 'Coordinamos tu pedido por WhatsApp' }, { title: 'Atención cercana', description: 'Te ayudamos a elegir tu look' }] })
 
+  useEffect(() => { if (!logged) return; fetch('/api/catalog').then(response => response.json()).then(data => { if (Array.isArray(data)) setProducts(data) }).catch(() => setMessage('No se pudo cargar el catálogo')) }, [logged])
+
   function saveCopy(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
@@ -37,18 +39,20 @@ export default function AdminPage() {
 
   function addCategory(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const name = String(data.get('categoryName')).trim(); if (name && !categories.includes(name)) setCategories(current => [...current, name]); event.currentTarget.reset(); setMessage('Categoría agregada al catálogo') }
 
-  function updateStock(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const id = Number(data.get('productId')); const stock = Math.max(0, Number(data.get('stock'))); setProducts(current => current.map(product => product.id === id ? { ...product, stock } : product)); setMessage('Stock actualizado'); }
+  async function updateStock(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const id = Number(data.get('productId')); const stock = Math.max(0, Number(data.get('stock'))); const response = await fetch(`/api/catalog/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stock }) }); if (!response.ok) { setMessage('No se pudo actualizar el stock'); return } setProducts(current => current.map(product => product.id === id ? { ...product, stock } : product)); setMessage('Stock actualizado en Neon'); }
 
-  function updateAllStock(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); setProducts(current => current.map(product => ({ ...product, stock: Math.max(0, Number(data.get(`stock-${product.id}`)) || 0) }))); setMessage('Stock de todos los productos actualizado'); }
+  async function updateAllStock(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); const updates = products.map(product => ({ id: product.id, stock: Math.max(0, Number(data.get(`stock-${product.id}`)) || 0) })); const responses = await Promise.all(updates.map(update => fetch(`/api/catalog/${update.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ stock: update.stock }) }))); if (responses.some(response => !response.ok)) { setMessage('No se pudo actualizar todo el inventario'); return } setProducts(current => current.map(product => ({ ...product, stock: updates.find(update => update.id === product.id)?.stock ?? product.stock }))); setMessage('Stock de todos los productos actualizado en Neon'); }
 
-  function addProduct(event: FormEvent<HTMLFormElement>) {
+  async function addProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    setProducts(current => [{
-      id: Date.now(), name: String(data.get('name')), category: String(data.get('category')), price: Number(data.get('price')), image: String(data.get('image')) || demoProducts[0].image, stock: Math.max(0, Number(data.get('stock')) || 0), lowStockThreshold: Math.max(1, Number(data.get('lowStockThreshold')) || 3),
-    }, ...current])
+    const payload = { name: String(data.get('name')), category: String(data.get('category')), price: Number(data.get('price')), image: String(data.get('image')) || demoProducts[0].image, stock: Math.max(0, Number(data.get('stock')) || 0), lowStockThreshold: Math.max(1, Number(data.get('lowStockThreshold')) || 3), sizes: String(data.get('sizes') || 'S, M, L').split(',').map(size => size.trim()).filter(Boolean) }
+    const response = await fetch('/api/catalog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    if (!response.ok) { setMessage('No se pudo guardar el producto'); return }
+    const product = await response.json()
+    setProducts(current => [product, ...current])
     event.currentTarget.reset()
-    setMessage('Producto agregado al catálogo de esta demo')
+    setMessage('Producto guardado en Neon')
   }
 
   return <main className="min-h-screen bg-background text-foreground">
