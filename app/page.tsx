@@ -1,5 +1,6 @@
 'use client'
 
+import useSWR from 'swr'
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowRight, Heart, Menu, Minus, Package, Search, ShoppingBag, Sparkles, X, Zap,
@@ -7,6 +8,8 @@ import {
 
 type Product = { id:number; name:string; category:string; price:number; oldPrice?:number; color:string; image:string; badge?:string; description:string; sizes:string[]; stock:number; lowStockThreshold:number }
 type CartLine = { id:number; size:string; quantity:number }
+
+const fetcher = (url:string) => fetch(url).then(response => { if (!response.ok) throw new Error('No se pudo cargar el catálogo'); return response.json() })
 
 const initialProducts: Product[] = [
   { id:1, name:'Body Negro Escote V', category:'Bodies', price:24990, oldPrice:29990, color:'Negro', badge:'-17%', image:'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=85', description:'Body clásico y versátil para combinar con todo.', sizes:['S','M','L'], stock:2, lowStockThreshold:3 },
@@ -18,8 +21,11 @@ const initialProducts: Product[] = [
 ]
 
 export default function Page() {
+  const { data: remoteProducts } = useSWR<Product[]>('/api/catalog', fetcher, { fallbackData: initialProducts, revalidateOnFocus: false })
   const [products, setProducts] = useState(initialProducts)
   const [cart, setCart] = useState<CartLine[]>([])
+
+  useEffect(() => { if (remoteProducts?.length) setProducts(remoteProducts) }, [remoteProducts])
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('Todos')
   const [categorySection, setCategorySection] = useState('Todos')
