@@ -9,5 +9,5 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!Number.isInteger(stock)) return NextResponse.json({ error: 'Stock inválido' }, { status: 400 })
   const result = await db.execute(sql`UPDATE products SET stock = ${stock} WHERE id = ${Number(id)} RETURNING id, stock`)
   if (!result.rows[0]) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 })
-  return NextResponse.json(result.rows[0])
+  return NextResponse.json({ ...result.rows[0], stock: Number(result.rows[0].stock) })
 }
