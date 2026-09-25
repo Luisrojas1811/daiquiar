@@ -9,7 +9,7 @@ export async function GET() {
     FROM products p LEFT JOIN categories c ON c.id = p.category_id
     ORDER BY p.created_at DESC
   `)
-  return NextResponse.json(result.rows)
+  return NextResponse.json(result.rows.map(row => ({ ...row, price: Number(row.price), oldPrice: row.oldPrice == null ? undefined : Number(row.oldPrice), stock: Number(row.stock), lowStockThreshold: Number(row.lowStockThreshold) })))
 }
 
 export async function POST(request: Request) {
@@ -30,5 +30,6 @@ export async function POST(request: Request) {
     VALUES (${name}, ${categoryId}, ${price}, ${body.oldPrice ? Number(body.oldPrice) : null}, ${body.color ?? null}, ${body.image ?? null}, ${body.badge ?? null}, ${body.description ?? null}, ${stock}, ${Math.max(1, Number(body.lowStockThreshold) || 3)}, ${sizes})
     RETURNING *
   `)
-  return NextResponse.json(product.rows[0], { status: 201 })
+  const created = product.rows[0]
+  return NextResponse.json({ ...created, price: Number(created.price), oldPrice: created.oldPrice == null ? undefined : Number(created.oldPrice), stock: Number(created.stock), lowStockThreshold: Number(created.lowStockThreshold) }, { status: 201 })
 }
