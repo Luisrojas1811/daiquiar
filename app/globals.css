@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -35,6 +34,8 @@ button { cursor: pointer; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid color-mix(in oklab, var(--primary) 35%, transparent); outline-offset: 2px; }
 ::selection { background: color-mix(in oklab, var(--primary) 25%, transparent); }
 
+/* El cartel tiene dos mitades idénticas: al desplazarse 50% queda exactamente igual, así el loop no tiene saltos. */
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-.animate-marquee { animation: marquee 18s linear infinite; will-change: transform; }
-@media (prefers-reduced-motion: reduce) { .animate-marquee { animation: none; } }
+.animate-marquee { animation: marquee 30s linear infinite; will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .animate-marquee { animation-duration: 120s; } }
+
