@@ -39,7 +39,7 @@ export function computeTotals(content: SiteContent, subtotal: number, shipping: 
   const shippingCost = option && !freeShipping ? option.cost : 0
   const discount = Math.round((couponDiscount + transferDiscount) * 100) / 100
   const total = Math.max(0, Math.round((subtotal - discount + shippingCost) * 100) / 100)
-  return { subtotal, couponDiscount, transferDiscount, discount, shippingCost, freeShipping, freeFrom, total, deposit: Math.round(total * num(content.payment_deposit_percent)) / 100 }
+  return { subtotal, couponDiscount, transferDiscount, discount, shippingCost, freeShipping, freeFrom, total }
 }
 
 export const money = (value: number) => `$${Math.round(value).toLocaleString('es-AR')}`

@@ -88,7 +88,6 @@ export default function ProductPage() {
             {product.description && <Accordion title="Descripción" open>{product.description}</Accordion>}
             <Accordion title="Medios de pago" icon={<CreditCard size={17} className="text-primary" />}>
               <ul className="space-y-2">{paymentOptions(content).map(p => <li key={p.id} className="flex justify-between"><span>{p.label}{p.note && <b className="ml-2 text-primary">{p.note}</b>}</span><span className="font-semibold">{money(p.id === 'transfer' ? product.price * (1 - transfer / 100) : product.price)}</span></li>)}</ul>
-              <p className="mt-3 text-xs text-muted-foreground">Para confirmar el pedido se abona un {content.payment_deposit_percent}% de anticipo.</p>
             </Accordion>
             <Accordion title="Envíos" icon={<Truck size={17} className="text-primary" />}>
               <ul className="space-y-2">{shippingOptions(content).map(s => <li key={s.id} className="flex justify-between gap-4"><span>{s.label}</span><span className="font-semibold whitespace-nowrap">{s.cost ? money(s.cost) : 'Gratis'}</span></li>)}</ul>

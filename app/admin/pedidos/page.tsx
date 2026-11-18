@@ -37,7 +37,7 @@ function OrdersList() {
   const tabs = [{ id: 'all', label: 'Todos', count: orders?.length }, ...ORDER_STATUSES.map(s => ({ id: s.id as string, label: s.label, count: orders?.filter(o => o.status === s.id).length }))]
 
   return <>
-    <PageHeader title="Pedidos" description="Todas las compras de la tienda. Cambiá el estado a medida que avanzás: seña, pago, envío y entrega."
+    <PageHeader title="Pedidos" description="Todas las compras de la tienda. Cambiá el estado a medida que avanzás: confirmación, pago, envío y entrega."
       actions={<Button icon={<Download size={16} />} onClick={() => orders && exportCsv(filtered)} disabled={!filtered.length}>Exportar Excel</Button>} />
     <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
       <Tabs value={status} onChange={setStatus} items={tabs} />

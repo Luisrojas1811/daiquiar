@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 type Form = { email: string; firstName: string; lastName: string; phone: string; dni: string; street: string; number: string; floor: string; city: string; province: string; zip: string; notes: string }
 const EMPTY: Form = { email: '', firstName: '', lastName: '', phone: '', dni: '', street: '', number: '', floor: '', city: '', province: '', zip: '', notes: '' }
 const FORM_KEY = 'daiquiar_checkout_v1'
-type Done = { id: number; total: number; deposit: number; paymentMethod: string; transferDetails: string; whatsappText: string }
+type Done = { id: number; total: number; paymentMethod: string; transferDetails: string; whatsappText: string }
 
 const input = 'h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] outline-none transition placeholder:text-muted-foreground/70 focus:border-primary focus:ring-3 focus:ring-primary/10'
 function F({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
@@ -80,7 +80,7 @@ export default function CheckoutPage() {
       if (!response.ok) { setError(data.error || 'No se pudo confirmar el pedido.'); refreshCatalog(); return }
       const lines = data.items.map((i: { name: string; size: string; quantity: number; subtotal: number }) => `• ${i.name} · Talle ${i.size || 'Único'} · x${i.quantity} — ${money(i.subtotal)}`).join('\n')
       const whatsappText = `${content.whatsapp_intro} #${data.id}:\n\n${lines}\n\nTotal: ${money(data.total)} (${PAYMENT_NAMES[data.paymentMethod] ?? ''})\nNombre: ${name}\n${address ? `Dirección: ${address}\n` : 'Retiro en persona\n'}Teléfono: ${form.phone}`
-      setDone({ id: data.id, total: data.total, deposit: data.deposit, paymentMethod: data.paymentMethod, transferDetails: data.transferDetails, whatsappText })
+      setDone({ id: data.id, total: data.total, paymentMethod: data.paymentMethod, transferDetails: data.transferDetails, whatsappText })
       clearCart(); refreshCatalog(); window.scrollTo({ top: 0 })
     } catch { setError('No se pudo conectar. Probá de nuevo en unos segundos.') } finally { setLoading(false) }
   }
@@ -96,7 +96,6 @@ export default function CheckoutPage() {
       <p className="mt-2 text-muted-foreground">Tu pedido <b className="text-foreground">#{done.id}</b> quedó registrado. Te enviamos el detalle y nos vamos a contactar para coordinar.</p>
       <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-left">
         <div className="flex justify-between text-sm"><span>Total</span><b>{money(done.total)}</b></div>
-        <div className="mt-1 flex justify-between text-sm"><span>Anticipo para confirmar ({content.payment_deposit_percent}%)</span><b className="text-primary">{money(done.deposit)}</b></div>
         {done.transferDetails && <div className="mt-5 rounded-xl bg-secondary p-4"><p className="text-xs font-bold uppercase tracking-wider text-primary">Datos para transferir</p><p className="mt-2 text-sm whitespace-pre-line">{done.transferDetails}</p>
           <button onClick={() => { navigator.clipboard.writeText(done.transferDetails); setCopied(true) }} className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary">{copied ? <Check size={13} /> : <Copy size={13} />}{copied ? 'Copiado' : 'Copiar datos'}</button></div>}
       </div>

@@ -81,7 +81,7 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'cart_whatsapp_label', group: G[6], type: 'text', label: 'Botón de WhatsApp del carrito', default: 'Comprar/Pedir por WhatsApp' },
   { key: 'cart_how_title', group: G[6], type: 'text', label: 'Título del recuadro "cómo continúa"', default: 'Cómo continúa tu pedido' },
   { key: 'cart_how_text', group: G[6], type: 'textarea', label: 'Texto del recuadro "cómo continúa"', default: 'Confirmamos tu pedido y coordinamos el pago y el envío por WhatsApp.' },
-  { key: 'cart_note', group: G[6], type: 'textarea', label: 'Aviso al pie del carrito', default: 'Los pedidos se confirman con 50% de anticipo. Podés pagar por transferencia o efectivo.' },
+  { key: 'cart_note', group: G[6], type: 'textarea', label: 'Aviso al pie del carrito', default: 'Podés pagar por transferencia o efectivo.' },
   { key: 'whatsapp_intro', group: G[6], type: 'text', label: 'Primera línea del mensaje de WhatsApp', default: 'Hola Daiquiar Indumentaria! Quiero confirmar el pedido', hint: 'Después de esta frase se agrega automáticamente el número de pedido y el detalle.' },
 
   // Footer
@@ -129,7 +129,6 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'payment_transfer_discount', group: G[11], type: 'number', label: 'Descuento por transferencia (%)', default: '10' },
   { key: 'payment_transfer_details', group: G[11], type: 'textarea', label: 'Datos para transferir', default: 'Alias: DAIQUIAR.TIENDA', hint: 'Se muestran al confirmar el pedido.' },
   { key: 'payment_cash_enabled', group: G[11], type: 'toggle', label: 'Aceptar efectivo', default: '1' },
-  { key: 'payment_deposit_percent', group: G[11], type: 'number', label: 'Anticipo para confirmar (%)', default: '50' },
 
   // Guía de talles
   { key: 'size_guide', group: G[12], type: 'textarea', label: 'Tabla de talles', default: 'S · Busto 82-86 · Cintura 62-66 · Cadera 88-92\nM · Busto 86-90 · Cintura 66-70 · Cadera 92-96\nL · Busto 90-96 · Cintura 70-76 · Cadera 96-102', hint: 'Una línea por talle. Se muestra en cada producto.' },

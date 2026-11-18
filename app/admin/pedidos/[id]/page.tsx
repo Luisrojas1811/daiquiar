@@ -81,7 +81,7 @@ export default function OrderDetail() {
             <div className="flex justify-between pt-2 text-base font-semibold"><dt>Total</dt><dd className="tabular-nums">{money(order.total)}</dd></div>
           </dl>
         </Card>
-        <Card title="Notas internas" description="Solo las ves vos. Ej.: “Pagó seña el 12/11”, “Envío con código XXXX”.">
+        <Card title="Notas internas" description="Solo las ves vos. Ej.: “Pagó el 12/11”, “Envío con código XXXX”.">
           <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Escribí una nota…" />
           <div className="mt-3 flex justify-end"><Button size="sm" variant="primary" disabled={notes === order.adminNotes} loading={saving === 'notes'} onClick={() => update({ adminNotes: notes }, 'notes')}>Guardar nota</Button></div>
         </Card>

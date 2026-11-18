@@ -69,7 +69,7 @@ export default function AdminHome() {
         <Stat label="Ventas del mes" value={money(data.monthRevenue)} current={data.monthRevenue} previous={data.prevMonthRevenue} hint="vs. mes anterior" />
         <Stat label="Pedidos del mes" value={String(data.monthOrders)} current={data.monthOrders} previous={data.prevMonthOrders} hint="vs. mes anterior" href="/admin/pedidos" />
         <Stat label="Ticket promedio" value={money(data.averageTicket)} hint="por pedido este mes" />
-        <Stat label="Para preparar / enviar" value={String(data.toShip)} hint="con seña o pagados" href="/admin/pedidos?estado=confirmed" />
+        <Stat label="Para preparar / enviar" value={String(data.toShip)} hint="confirmados o pagados" href="/admin/pedidos?estado=confirmed" />
       </> : Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
     </div>
 
