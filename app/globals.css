@@ -12,6 +12,10 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
@@ -24,7 +28,24 @@
   --radius-xl: calc(var(--radius) * 1.4);
 }
 
-:root { color-scheme: light; --background: oklch(0.97 0.018 67); --foreground: oklch(0.22 0.04 25); --card: oklch(0.99 0.01 67); --card-foreground: oklch(0.22 0.04 25); --popover: oklch(0.99 0.01 67); --popover-foreground: oklch(0.22 0.04 25); --primary: oklch(0.38 0.16 20); --primary-foreground: oklch(0.98 0.01 67); --muted: oklch(0.92 0.04 55); --muted-foreground: oklch(0.43 0.06 30); --border: oklch(0.84 0.05 55); --input: oklch(0.84 0.05 55); --ring: oklch(0.38 0.16 20); --destructive: oklch(0.58 0.22 25); --radius: 0.75rem; }
+:root {
+  color-scheme: light;
+  /* Paleta oficial Daiquiar */
+  --daiq-bordo: #80011F;      /* identidad · botones · promos · títulos */
+  --daiq-crema: #FDF3E8;      /* fondo general · texto sobre bordó */
+  --daiq-chocolate: #351719;  /* textos */
+  --daiq-beige: #E8D9C6;      /* bordes · secundarios */
+  --daiq-rosa: #F5E4DC;       /* fondo secundario */
+  --background: var(--daiq-crema); --foreground: var(--daiq-chocolate);
+  --card: #FFFAF4; --card-foreground: var(--daiq-chocolate);
+  --popover: #FFFAF4; --popover-foreground: var(--daiq-chocolate);
+  --primary: var(--daiq-bordo); --primary-foreground: var(--daiq-crema);
+  --secondary: var(--daiq-rosa); --secondary-foreground: var(--daiq-chocolate);
+  --accent: var(--daiq-beige); --accent-foreground: var(--daiq-chocolate);
+  --muted: var(--daiq-rosa); --muted-foreground: #7A5A58;
+  --border: var(--daiq-beige); --input: var(--daiq-beige); --ring: var(--daiq-bordo);
+  --destructive: #B42318; --radius: 0.75rem;
+}
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: var(--background); }
@@ -39,3 +60,22 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .animate-marquee { animation: marquee 30s linear infinite; will-change: transform; }
 @media (prefers-reduced-motion: reduce) { .animate-marquee { animation-duration: 120s; } }
 
+
+/* ───────── Panel de administración: paleta propia, más neutra y profesional ───────── */
+.admin-theme {
+  --background: oklch(0.975 0.004 60);
+  --foreground: #2b1416;
+  --card: oklch(1 0 0);
+  --card-foreground: #2b1416;
+  --primary: #80011F;
+  --primary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.955 0.006 60);
+  --muted-foreground: oklch(0.52 0.012 50);
+  --border: oklch(0.915 0.008 60);
+  --input: oklch(0.88 0.01 60);
+  --ring: #80011F;
+  --destructive: oklch(0.55 0.2 25);
+  --radius: 0.7rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'tnum' 1;
+}

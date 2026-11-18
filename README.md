@@ -1,30 +1,34 @@
 # Daiquiar
 
-Tienda Next.js + PostgreSQL/Neon + Drizzle ORM. Los pedidos se confirman por WhatsApp.
+Tienda Next.js + PostgreSQL/Neon. Recorrido de compra estilo Tiendanube (carrito lateral → checkout en pasos → confirmación), aviso por email a la dueña y panel de administración completo en `/admin`.
 
 ## Configuración
 
-1. Copiá `.env.example` a `.env.local` y completá:
-   `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`.
-2. En Neon ejecutá `lib/db/schema.sql` (o solo `neon/migration-003-contenido-editable.sql` si ya tenés las tablas). Es seguro correrlo varias veces: no borra datos.
-3. `npm install` (o `pnpm install`) y `npm run build` para verificar.
+1. Variables de entorno (Vercel → Settings → Environment Variables, o `.env.local`):
+   - `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`
+   - `RESEND_API_KEY` (opcional, para el email de cada pedido) y `EMAIL_FROM` (remitente con dominio verificado en Resend).
+2. La base se actualiza sola al arrancar (todas las sentencias son `IF NOT EXISTS`, no borran datos). Si preferís hacerlo a mano: `neon/migration-004-ecommerce-completo.sql`.
+3. `npm install` y `npm run build`.
 
-## Panel Admin (`/admin`)
+## Tienda
 
-**Productos y stock**
-- Crear, editar y eliminar productos (fotos guardadas en la base, talles, stock por talle, umbral de bajo stock).
-- El stock **se descuenta solo** cuando un cliente confirma un pedido. El panel y la tienda se refrescan solos.
-- Si el stock de un talle (o del producto) llega al umbral, la tienda muestra el cartel **“Queda poco stock”**. En el Admin ese talle se marca en rojo.
+| Ruta | Qué hace |
+|---|---|
+| `/` | Portada, categorías, “más elegidos” (destacados), nuevos ingresos, beneficios |
+| `/productos`, `/categoria/[slug]` | Listado con filtros (talle, precio, con stock) y orden |
+| `/producto/[id]` | Galería, talles, guía de talles, stock, precio con transferencia, medios de pago, envíos, relacionados |
+| Carrito lateral | Se abre al agregar; barra de “envío gratis”, “Iniciar compra” |
+| `/checkout` | Paso 1 contacto + entrega · Paso 2 pago + cupón · Paso 3 confirmación con datos de transferencia y WhatsApp |
+| `/ayuda` | Cómo comprar, pagos, envíos, cambios, guía de talles, preguntas frecuentes |
 
-**Contenido de la tienda**
-- Foto principal de la portada, cartel rojo en movimiento, y todos los textos de la tienda (portada, menú, categorías, “Nuevos ingresos”, beneficios, carrito, footer, preguntas frecuentes, WhatsApp e Instagram).
-- Cada campo tiene “Restaurar original”. Solo se guarda en la base lo que se cambia.
-- Para sumar otro texto editable, agregalo en `lib/content.ts`; el Admin lo muestra solo.
+El total lo calcula el servidor (`lib/pricing.ts`): cupón → descuento por transferencia → envío (gratis desde el monto configurado). El stock se descuenta al confirmar y vuelve si el pedido se cancela desde el panel.
 
-## Stock por talle
+## Panel (`/admin`)
 
-Si un producto tiene talles, se controla el stock de cada talle. Un producto con talles pero sin stock cargado muestra los talles deshabilitados hasta que se asigne desde el Admin.
+Inicio (ventas, pedidos nuevos, stock bajo, más vendidos) · Pedidos (estados, notas, WhatsApp, exportar) · Clientas · Productos (fotos ordenables, talles y stock, publicado/oculto, destacado) · Inventario (planilla rápida) · Categorías (foto, orden, visibilidad) · Promociones (cupones y cartel) · Diseño y textos · Envíos y pagos · Configuración (email de pedidos, contacto, estado de conexiones).
 
-## Imágenes
+Para sumar un texto editable nuevo, agregalo en `lib/content.ts`: el panel lo muestra solo.
 
-El Admin achica cada foto en el navegador (máx. 1600 px) y la guarda en la tabla `images` de la base; la tienda las sirve desde `/api/images/<id>`. No hace falta ningún servicio externo.
+## Paleta
+
+Bordó `#80011F` · Crema `#FDF3E8` · Chocolate `#351719` · Beige `#E8D9C6` · Rosa `#F5E4DC` (tokens en `app/globals.css`).

@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { isAdminRequest } from '@/lib/auth'
 import { fetchProducts } from '@/lib/catalog'
 import { pgTextArray } from '@/lib/pg'
+import { ensureSchema } from '@/lib/db/ensure'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,6 +39,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (body.description !== undefined) set.push(sql`description = ${String(body.description)}`)
     if (body.color !== undefined) set.push(sql`color = ${String(body.color)}`)
     if (body.badge !== undefined) set.push(sql`badge = ${body.badge ? String(body.badge) : null}`)
+    if (body.oldPrice !== undefined) set.push(sql`old_price = ${body.oldPrice === null || body.oldPrice === '' || !Number(body.oldPrice) ? null : Number(body.oldPrice)}`)
+    if (body.active !== undefined) set.push(sql`active = ${body.active === true}`)
+    if (body.featured !== undefined) set.push(sql`featured = ${body.featured === true}`)
+    if (body.sku !== undefined) set.push(sql`sku = ${body.sku ? String(body.sku) : null}`)
     if (body.lowStockThreshold !== undefined) set.push(sql`low_stock_threshold = ${Math.max(1, Math.floor(Number(body.lowStockThreshold) || 3))}`)
 
     if (body.sizes !== undefined) {
@@ -77,6 +82,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (body.appendImages !== undefined && !Array.isArray(body.appendImages)) return NextResponse.json({ error: 'Imágenes inválidas' }, { status: 400 })
     if (!set.length && !appendImages.length) return NextResponse.json({ error: 'No hay cambios' }, { status: 400 })
 
+    await ensureSchema()
+    set.push(sql`updated_at = now()`)
     await db.transaction(async tx => {
       if (appendImages.length) {
         const current = await tx.execute(sql`SELECT image, images FROM products WHERE id = ${productId} FOR UPDATE`)

@@ -1,5 +1,6 @@
 import { sql, type SQL } from 'drizzle-orm'
 import { db } from '@/lib/db'
+import { ensureSchema } from '@/lib/db/ensure'
 
 export function mapProduct(row: Record<string, unknown>) {
   const sizes = Array.isArray(row.sizes) ? row.sizes.map(String) : []
@@ -12,6 +13,7 @@ export function mapProduct(row: Record<string, unknown>) {
   return {
     ...row,
     id: Number(row.id),
+    name: String(row.name ?? ''),
     category: row.category == null ? '' : String(row.category),
     price: Number(row.price),
     oldPrice: row.oldPrice == null ? undefined : Number(row.oldPrice),
@@ -21,17 +23,29 @@ export function mapProduct(row: Record<string, unknown>) {
     sizeStock,
     images: rawImages.length ? rawImages : image ? [image] : [],
     image,
+    active: row.active !== false,
+    featured: row.featured === true,
+    sku: row.sku == null ? '' : String(row.sku),
+    color: row.color == null ? '' : String(row.color),
+    badge: row.badge == null ? '' : String(row.badge),
+    description: row.description == null ? '' : String(row.description),
   }
 }
 
 export async function fetchProducts(where?: SQL) {
+  await ensureSchema()
   const result = await db.execute(sql`
     SELECT p.id, p.name, c.name AS category, p.price, p.old_price AS "oldPrice", p.color,
       p.image, p.images, p.badge, p.description, p.stock,
-      p.low_stock_threshold AS "lowStockThreshold", p.sizes, p.size_stock AS "sizeStock"
+      p.low_stock_threshold AS "lowStockThreshold", p.sizes, p.size_stock AS "sizeStock",
+      p.active, p.featured, p.sku, p.created_at AS "createdAt"
     FROM products p LEFT JOIN categories c ON c.id = p.category_id
     ${where ? sql`WHERE ${where}` : sql``}
     ORDER BY p.created_at DESC, p.id DESC
   `)
   return result.rows.map(row => mapProduct(row as Record<string, unknown>))
+}
+
+export function totalStock(product: ReturnType<typeof mapProduct>) {
+  return product.sizes.length ? product.sizes.reduce((sum, size) => sum + (product.sizeStock[size] ?? 0), 0) : product.stock
 }

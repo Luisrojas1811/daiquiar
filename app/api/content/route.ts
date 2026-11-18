@@ -2,27 +2,16 @@ import { NextResponse } from 'next/server'
 import { sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { isAdminRequest } from '@/lib/auth'
-import { CONTENT_FIELD_BY_KEY, DEFAULT_CONTENT, type SiteContent } from '@/lib/content'
+import { CONTENT_FIELD_BY_KEY, DEFAULT_CONTENT } from '@/lib/content'
+import { getSiteContent } from '@/lib/settings'
 
 export const dynamic = 'force-dynamic'
 const noStore = { 'Cache-Control': 'no-store, max-age=0' }
 
-// Crea la tabla si todavía no se corrió el SQL en Neon, así el panel nunca queda roto.
-async function ensureTable() {
-  await db.execute(sql`CREATE TABLE IF NOT EXISTS site_content (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`)
-}
-
 // Devuelve los textos por defecto + lo que la dueña haya cambiado desde el Admin.
 export async function GET() {
   try {
-    await ensureTable()
-    const result = await db.execute(sql`SELECT key, value FROM site_content`)
-    const content: SiteContent = { ...DEFAULT_CONTENT }
-    for (const row of result.rows) {
-      const key = String(row.key)
-      if (CONTENT_FIELD_BY_KEY[key]) content[key] = String(row.value)
-    }
-    return NextResponse.json(content, { headers: noStore })
+    return NextResponse.json(await getSiteContent(), { headers: noStore })
   } catch (error) {
     console.error('Error al leer el contenido', error)
     return NextResponse.json(DEFAULT_CONTENT, { headers: noStore })
@@ -35,6 +24,8 @@ function clean(key: string, raw: unknown): string | null {
   let value = raw.trim()
   if (value.length > 2000) return null
   if (field.type === 'phone') value = value.replace(/\D/g, '')
+  if (field.type === 'toggle') return value === '1' ? '1' : '0'
+  if (field.type === 'number') { const n = Number(value.replace(',', '.')); return Number.isFinite(n) && n >= 0 ? String(n) : null }
   const isOwnImage = field.type === 'image' && /^\/api\/images\/[0-9a-f-]{36}$/i.test(value)
   if ((field.type === 'url' || field.type === 'image') && value && !isOwnImage && !/^https?:\/\//i.test(value)) return null
   if (field.type === 'image' && !value) return null
@@ -56,7 +47,7 @@ export async function PUT(request: Request) {
       entries.push([key, value])
     }
 
-    await ensureTable()
+    await getSiteContent() // asegura la tabla
     await db.transaction(async tx => {
       for (const [key, value] of entries) {
         await tx.execute(sql`

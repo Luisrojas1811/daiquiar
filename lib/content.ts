@@ -2,7 +2,7 @@
 // Para agregar un texto nuevo editable: sumá una entrada acá y usalo con `content.<key>`.
 // El panel Admin se arma solo a partir de esta lista.
 
-export type ContentFieldType = 'text' | 'textarea' | 'image' | 'url' | 'phone'
+export type ContentFieldType = 'text' | 'textarea' | 'image' | 'url' | 'phone' | 'number' | 'toggle'
 
 export type ContentField = {
   key: string
@@ -24,7 +24,13 @@ export const CONTENT_GROUPS = [
   'Pie de página',
   'Preguntas frecuentes',
   'Contacto y redes',
+  'Envíos',
+  'Pagos',
+  'Guía de talles',
 ] as const
+
+// Grupos que se editan desde "Envíos y pagos" en el Admin (el resto, desde "Contenido").
+export const SETTINGS_GROUPS: string[] = ['Envíos', 'Pagos', 'Guía de talles']
 
 const G = CONTENT_GROUPS
 
@@ -104,6 +110,29 @@ export const CONTENT_FIELDS: ContentField[] = [
   // Contacto
   { key: 'whatsapp_number', group: G[9], type: 'phone', label: 'WhatsApp de la tienda', default: '5491100000000', hint: 'Con código de país y sin signos. Ej.: 5491122334455. Acá llegan los pedidos.' },
   { key: 'instagram_url', group: G[9], type: 'url', label: 'Link de Instagram', default: 'https://instagram.com/daiquiar.indumentaria' },
+  { key: 'order_notify_email', group: G[9], type: 'text', label: 'Email donde llegan los pedidos', default: '', hint: 'Cada compra nueva te llega a este email con todo el detalle. Podés poner varios separados por coma.' },
+  { key: 'store_location', group: G[9], type: 'text', label: 'Ubicación / showroom', default: 'CABA, Buenos Aires' },
+
+  // Envíos
+  { key: 'shipping_free_from', group: G[10], type: 'number', label: 'Envío gratis desde ($)', default: '100000', hint: 'Si el subtotal llega a este monto, el envío es gratis. Poné 0 para desactivarlo.' },
+  { key: 'shipping_caba_enabled', group: G[10], type: 'toggle', label: 'Ofrecer envío en CABA / GBA', default: '1' },
+  { key: 'shipping_caba_label', group: G[10], type: 'text', label: 'Envío CABA · nombre', default: 'Moto en CABA y GBA' },
+  { key: 'shipping_caba_cost', group: G[10], type: 'number', label: 'Envío CABA · costo ($)', default: '5000' },
+  { key: 'shipping_country_enabled', group: G[10], type: 'toggle', label: 'Ofrecer envío a todo el país', default: '1' },
+  { key: 'shipping_country_label', group: G[10], type: 'text', label: 'Envío al país · nombre', default: 'Correo Argentino a todo el país' },
+  { key: 'shipping_country_cost', group: G[10], type: 'number', label: 'Envío al país · costo ($)', default: '9000' },
+  { key: 'shipping_pickup_enabled', group: G[10], type: 'toggle', label: 'Ofrecer retiro en persona', default: '1' },
+  { key: 'shipping_pickup_label', group: G[10], type: 'text', label: 'Retiro · nombre', default: 'Retiro en showroom (CABA) · sin cargo' },
+
+  // Pagos
+  { key: 'payment_transfer_enabled', group: G[11], type: 'toggle', label: 'Aceptar transferencia', default: '1' },
+  { key: 'payment_transfer_discount', group: G[11], type: 'number', label: 'Descuento por transferencia (%)', default: '10' },
+  { key: 'payment_transfer_details', group: G[11], type: 'textarea', label: 'Datos para transferir', default: 'Alias: DAIQUIAR.TIENDA', hint: 'Se muestran al confirmar el pedido.' },
+  { key: 'payment_cash_enabled', group: G[11], type: 'toggle', label: 'Aceptar efectivo', default: '1' },
+  { key: 'payment_deposit_percent', group: G[11], type: 'number', label: 'Anticipo para confirmar (%)', default: '50' },
+
+  // Guía de talles
+  { key: 'size_guide', group: G[12], type: 'textarea', label: 'Tabla de talles', default: 'S · Busto 82-86 · Cintura 62-66 · Cadera 88-92\nM · Busto 86-90 · Cintura 66-70 · Cadera 92-96\nL · Busto 90-96 · Cintura 70-76 · Cadera 96-102', hint: 'Una línea por talle. Se muestra en cada producto.' },
 ]
 
 export type SiteContent = Record<string, string>

@@ -4,15 +4,18 @@ import { db } from '@/lib/db'
 import { isAdminRequest } from '@/lib/auth'
 import { fetchProducts } from '@/lib/catalog'
 import { pgTextArray } from '@/lib/pg'
+import { ensureSchema } from '@/lib/db/ensure'
 
 // El stock cambia con cada compra: esta ruta nunca debe quedar cacheada.
 export const dynamic = 'force-dynamic'
 
 const noStore = { 'Cache-Control': 'no-store, max-age=0' }
 
-export async function GET() {
+// La tienda solo ve productos publicados; el Admin (con ?all=1) ve también los ocultos.
+export async function GET(request: Request) {
   try {
-    return NextResponse.json(await fetchProducts(), { headers: noStore })
+    const all = new URL(request.url).searchParams.get('all') === '1' && isAdminRequest(request)
+    return NextResponse.json(await fetchProducts(all ? undefined : sql`p.active = true`), { headers: noStore })
   } catch (error) {
     console.error('Error al leer el catálogo', error)
     return NextResponse.json({ error: 'No se pudo leer el catálogo' }, { status: 500, headers: noStore })
@@ -35,6 +38,7 @@ export async function POST(request: Request) {
     const image = images[0] ?? (body.image ? String(body.image) : null)
     if (!name || !category || !Number.isFinite(price) || price < 0) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
 
+    await ensureSchema()
     const categoryResult = await db.execute(sql`
       INSERT INTO categories (name) VALUES (${category})
       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
@@ -42,10 +46,11 @@ export async function POST(request: Request) {
     `)
     const categoryId = categoryResult.rows[0]?.id
     const inserted = await db.execute(sql`
-      INSERT INTO products (name, category_id, price, old_price, color, image, images, badge, description, stock, low_stock_threshold, sizes, size_stock)
+      INSERT INTO products (name, category_id, price, old_price, color, image, images, badge, description, stock, low_stock_threshold, sizes, size_stock, active, featured, sku)
       VALUES (${name}, ${categoryId}, ${price}, ${body.oldPrice != null && body.oldPrice !== '' ? Number(body.oldPrice) : null},
         ${body.color ?? null}, ${image}, ${pgTextArray(images)}::text[], ${body.badge ?? null}, ${body.description ?? null}, ${sizes.length ? 0 : stock},
-        ${Math.max(1, Math.floor(Number(body.lowStockThreshold) || 3))}, ${pgTextArray(sizes)}::text[], ${JSON.stringify(sizeStock)}::jsonb)
+        ${Math.max(1, Math.floor(Number(body.lowStockThreshold) || 3))}, ${pgTextArray(sizes)}::text[], ${JSON.stringify(sizeStock)}::jsonb,
+        ${body.active !== false}, ${body.featured === true}, ${body.sku ? String(body.sku) : null})
       RETURNING id
     `)
     const [product] = await fetchProducts(sql`p.id = ${Number(inserted.rows[0].id)}`)
