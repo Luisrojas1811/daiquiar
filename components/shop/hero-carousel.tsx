@@ -39,8 +39,8 @@ export function HeroCarousel({ products }: { products: Product[] }) {
               <h1 className="font-display text-5xl leading-[1.02] font-semibold md:text-7xl">{content.hero_title}</h1>
               <p className="mt-6 max-w-md text-lg leading-8 text-primary-foreground/80">{content.hero_description}</p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <Link href="/productos" tabIndex={i === index ? 0 : -1} className="inline-flex items-center gap-3 rounded-full bg-primary-foreground px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-primary hover:bg-secondary">{content.hero_cta_primary || 'Comprar ahora'} <ArrowRight size={16} /></Link>
-                {content.hero_cta_secondary && <a href="#categorias" tabIndex={i === index ? 0 : -1} className="rounded-full border border-primary-foreground/50 px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground hover:bg-primary-foreground/10">{content.hero_cta_secondary}</a>}
+                <Link href="/productos" tabIndex={i === index ? 0 : -1} className="pop shine inline-flex items-center gap-3 rounded-full bg-primary-foreground px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-primary hover:bg-secondary">{content.hero_cta_primary || 'Comprar ahora'} <ArrowRight size={16} /></Link>
+                {content.hero_cta_secondary && <a href="#categorias" tabIndex={i === index ? 0 : -1} className="pop rounded-full border border-primary-foreground/50 px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-primary-foreground hover:bg-primary-foreground/10">{content.hero_cta_secondary}</a>}
               </div>
             </div>
             <div className="relative order-1 md:order-2">
@@ -61,7 +61,7 @@ export function HeroCarousel({ products }: { products: Product[] }) {
               <div className="mt-6 flex flex-wrap items-baseline gap-3"><span className="text-3xl font-bold">{money(product.price)}</span>{off > 0 && <del className="opacity-60">{money(product.oldPrice!)}</del>}{off > 0 && <span className={cn('rounded-full px-3 py-1 text-xs font-bold', i % 2 === 0 ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground')}>{off}% OFF</span>}</div>
               {transfer > 0 && <p className="mt-1 text-sm font-bold opacity-80">{money(product.price * (1 - transfer / 100))} con transferencia</p>}
               {product.colors?.length > 0 && <div className="mt-5 flex gap-2">{product.colors.map(c => <span key={c.name} title={c.name} className="h-5 w-5 rounded-full border border-current/30" style={{ background: c.hex }} />)}</div>}
-              <Link href={`/producto/${product.id}`} tabIndex={i === index ? 0 : -1} className={cn('mt-8 inline-flex items-center gap-3 rounded-full px-8 py-4 text-xs font-bold uppercase tracking-[0.2em]', i % 2 === 0 ? 'bg-primary-foreground text-primary hover:bg-secondary' : 'bg-primary text-primary-foreground hover:brightness-110')}>Lo quiero <ArrowRight size={16} /></Link>
+              <Link href={`/producto/${product.id}`} tabIndex={i === index ? 0 : -1} className={cn('pop shine mt-8 inline-flex items-center gap-3 rounded-full px-8 py-4 text-xs font-bold uppercase tracking-[0.2em]', i % 2 === 0 ? 'bg-primary-foreground text-primary hover:bg-secondary' : 'bg-primary text-primary-foreground hover:brightness-110')}>Lo quiero <ArrowRight size={16} /></Link>
             </div>
             <Link href={`/producto/${product.id}`} tabIndex={-1} className="relative order-1 grid grid-cols-[1.4fr_1fr] gap-3 md:order-2">
               <img src={images[0] || EMPTY_IMAGE} alt={product.name} className="h-[340px] w-full rounded-[2rem] object-cover shadow-2xl md:h-[480px]" />
@@ -72,8 +72,8 @@ export function HeroCarousel({ products }: { products: Product[] }) {
       })}
     </div>
     {count > 1 && <>
-      <button onClick={() => go(-1)} aria-label="Anterior" className="absolute top-1/2 left-3 hidden -translate-y-1/2 rounded-full bg-background/90 p-3 text-primary shadow-lg transition hover:scale-105 md:block"><ChevronLeft size={20} /></button>
-      <button onClick={() => go(1)} aria-label="Siguiente" className="absolute top-1/2 right-3 hidden -translate-y-1/2 rounded-full bg-background/90 p-3 text-primary shadow-lg transition hover:scale-105 md:block"><ChevronRight size={20} /></button>
+      <button onClick={() => go(-1)} aria-label="Anterior" className="absolute top-1/2 left-3 hidden -translate-y-1/2 md:block"><span className="pop block rounded-full bg-background/90 p-3 text-primary shadow-lg"><ChevronLeft size={20} /></span></button>
+      <button onClick={() => go(1)} aria-label="Siguiente" className="absolute top-1/2 right-3 hidden -translate-y-1/2 md:block"><span className="pop block rounded-full bg-background/90 p-3 text-primary shadow-lg"><ChevronRight size={20} /></span></button>
       <div className="absolute inset-x-0 bottom-5 flex justify-center gap-2">{slides.map((_, i) => <button key={i} onClick={() => setIndex(i)} aria-label={`Ir a la diapositiva ${i + 1}`} className={cn('h-1.5 rounded-full transition-all', index % 2 === 0 ? (i === index ? 'w-8 bg-background' : 'w-3 bg-background/50') : (i === index ? 'w-8 bg-primary' : 'w-3 bg-primary/30'))} />)}</div>
     </>}
   </section>

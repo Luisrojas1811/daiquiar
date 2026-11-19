@@ -4,7 +4,7 @@ import Link from 'next/link'
 import useSWR from 'swr'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { ChevronRight, Menu, Minus, Plus, Search, ShoppingBag, Trash2, Truck, X } from 'lucide-react'
+import { ChevronRight, Menu, Minus, Plus, Search, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
 import { DEFAULT_CONTENT, type SiteContent } from '@/lib/content'
 import { computeTotals, money } from '@/lib/pricing'
 import type { Category, Product } from '@/lib/types'
@@ -137,7 +137,7 @@ function Header() {
   return <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
     <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6">
       <div className="flex items-center gap-1">
-        <button className="-ml-2 rounded-full p-2 lg:hidden" aria-label="Abrir menú" onClick={() => setMenuOpen(true)}><Menu size={21} /></button>
+        <button className="pop -ml-2 rounded-full p-2 lg:hidden" aria-label="Abrir menú" onClick={() => setMenuOpen(true)}><Menu size={21} /></button>
         <nav className="hidden items-center gap-6 text-[13px] font-semibold uppercase tracking-wider lg:flex">
           <Link href="/productos" className="hover:text-primary">{content.nav_new_label}</Link>
           {categories.slice(0, 5).map(c => <Link key={c.id} href={`/categoria/${c.slug}`} className="hover:text-primary">{c.name}</Link>)}
@@ -145,10 +145,11 @@ function Header() {
       </div>
       <Logo className="text-2xl sm:text-[28px]" />
       <div className="flex items-center justify-end gap-1">
-        <button onClick={() => setSearchOpen(open => !open)} aria-label="Buscar" className="rounded-full p-2 hover:bg-secondary"><Search size={20} /></button>
-        <a href={content.instagram_url} target="_blank" rel="noreferrer" aria-label="Instagram" className="hidden rounded-full p-2 hover:bg-secondary sm:block"><InstagramIcon size={20} /></a>
-        <button aria-label={`Carrito (${count})`} className="relative rounded-full p-2 hover:bg-secondary" onClick={() => setCartOpen(true)}>
-          <ShoppingBag size={20} />{count > 0 && <span className="absolute top-0.5 right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{count}</span>}
+        <button onClick={() => setSearchOpen(open => !open)} aria-label="Buscar" className="pop rounded-full p-2 hover:bg-secondary"><Search size={20} /></button>
+        <a href={content.instagram_url} target="_blank" rel="noreferrer" aria-label="Instagram" className="pop hidden rounded-full p-2 hover:bg-secondary sm:block"><InstagramIcon size={20} /></a>
+        <button aria-label={`Carrito (${count})`} className="pop relative rounded-full p-2 hover:bg-secondary" onClick={() => setCartOpen(true)}>
+          {/* key={count}: cada vez que cambia la cantidad, el carrito salta y el contador "late". */}
+          <span key={`cart-${count}`} className={count ? 'animate-bump inline-block' : 'inline-block'}><ShoppingCart size={21} /></span>{count > 0 && <span key={`badge-${count}`} className="animate-pop-in absolute top-0 right-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{count}</span>}
         </button>
       </div>
     </div>
@@ -172,7 +173,7 @@ function Footer() {
   return <footer className="mt-16 bg-primary text-primary-foreground">
     <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
       <div className="md:col-span-1"><p className="font-display text-3xl font-bold tracking-[0.22em]">DAIQUIAR</p><p className="mt-4 text-sm leading-6 text-primary-foreground/75">{content.footer_text}</p>
-        <div className="mt-5 flex gap-3"><a aria-label="Instagram" href={content.instagram_url} target="_blank" rel="noreferrer" className="rounded-full border border-primary-foreground/25 p-2.5 hover:bg-primary-foreground/10"><InstagramIcon size={18} /></a><a aria-label="WhatsApp" href={whatsappHref} target="_blank" rel="noreferrer" className="rounded-full border border-primary-foreground/25 p-2.5 hover:bg-primary-foreground/10"><WhatsAppIcon size={18} /></a></div>
+        <div className="mt-5 flex gap-3"><a aria-label="Instagram" href={content.instagram_url} target="_blank" rel="noreferrer" className="pop rounded-full border border-primary-foreground/25 p-2.5 hover:bg-primary-foreground/10"><InstagramIcon size={18} /></a><a aria-label="WhatsApp" href={whatsappHref} target="_blank" rel="noreferrer" className="pop rounded-full border border-primary-foreground/25 p-2.5 hover:bg-primary-foreground/10"><WhatsAppIcon size={18} /></a></div>
       </div>
       <div><p className="text-xs font-bold uppercase tracking-[0.2em]">Tienda</p><ul className="mt-4 space-y-2.5 text-sm text-primary-foreground/75"><li><Link href="/productos" className="hover:text-primary-foreground">Ver todo</Link></li>{categories.map(c => <li key={c.id}><Link href={`/categoria/${c.slug}`} className="hover:text-primary-foreground">{c.name}</Link></li>)}</ul></div>
       <div><p className="text-xs font-bold uppercase tracking-[0.2em]">{content.footer_info_title}</p><ul className="mt-4 space-y-2.5 text-sm text-primary-foreground/75"><li><Link href="/ayuda#como-comprar" className="hover:text-primary-foreground">Cómo comprar</Link></li><li><Link href="/ayuda#pagos" className="hover:text-primary-foreground">{content.footer_button_payments}</Link></li><li><Link href="/ayuda#envios" className="hover:text-primary-foreground">{content.footer_button_shipping}</Link></li><li><Link href="/ayuda#cambios" className="hover:text-primary-foreground">{content.footer_button_returns}</Link></li><li><Link href="/ayuda#talles" className="hover:text-primary-foreground">Guía de talles</Link></li></ul></div>
@@ -195,7 +196,7 @@ function CartDrawer() {
     <div className="absolute inset-0 bg-foreground/40 animate-in fade-in" onClick={() => setCartOpen(false)} />
     <aside className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-background shadow-2xl animate-in slide-in-from-right duration-300">
       <div className="flex items-center justify-between border-b border-border px-5 py-4"><h2 className="font-display text-xl font-semibold">{content.cart_title}</h2><button onClick={() => setCartOpen(false)} aria-label="Cerrar carrito" className="rounded-full p-1.5 hover:bg-secondary"><X size={22} /></button></div>
-      {cartLines.length === 0 ? <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center"><ShoppingBag size={36} className="text-muted-foreground" /><p className="text-muted-foreground">{content.cart_empty_text}</p><button onClick={() => { setCartOpen(false); router.push('/productos') }} className="rounded-full border border-primary px-6 py-2.5 text-sm font-semibold text-primary">Ver productos</button></div> : <>
+      {cartLines.length === 0 ? <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center"><ShoppingCart size={40} className="animate-pop-in text-muted-foreground" /><p className="text-muted-foreground">{content.cart_empty_text}</p><button onClick={() => { setCartOpen(false); router.push('/productos') }} className="pop rounded-full border border-primary px-6 py-2.5 text-sm font-semibold text-primary hover:bg-primary hover:text-primary-foreground">Ver productos</button></div> : <>
         {totals.freeFrom > 0 && <div className="border-b border-border bg-secondary/60 px-5 py-3 text-xs">
           <p className="flex items-center gap-2 font-medium"><Truck size={15} className="text-primary" />{missing > 0 ? <>Te faltan <b>{money(missing)}</b> para tener envío gratis</> : <b className="text-primary">¡Tenés envío gratis!</b>}</p>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-accent"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, (subtotal / totals.freeFrom) * 100)}%` }} /></div>
@@ -205,10 +206,10 @@ function CartDrawer() {
           return <li className="flex gap-4 py-4" key={lineKey(line)}>
             <Link href={`/producto/${line.id}`} onClick={() => setCartOpen(false)}><img src={colorImage(line.product, line.color) || EMPTY_IMAGE} alt="" className="h-24 w-20 rounded-lg object-cover" /></Link>
             <div className="flex min-w-0 flex-1 flex-col">
-              <div className="flex justify-between gap-2"><p className="text-sm font-semibold leading-snug">{line.product.name}</p><button onClick={() => remove(line)} aria-label="Quitar del carrito" className="h-fit text-muted-foreground hover:text-primary"><Trash2 size={16} /></button></div>
+              <div className="flex justify-between gap-2"><p className="text-sm font-semibold leading-snug">{line.product.name}</p><button onClick={() => remove(line)} aria-label="Quitar del carrito" className="pop h-fit text-muted-foreground hover:text-primary"><Trash2 size={16} /></button></div>
               <p className="text-xs text-muted-foreground">{line.color && <>Color: {line.color} · </>}Talle: {line.size || 'Único'}</p>
               <div className="mt-auto flex items-center justify-between pt-2">
-                <div className="flex items-center rounded-full border border-border"><button onClick={() => changeQuantity(line, -1)} className="p-1.5" aria-label="Restar"><Minus size={14} /></button><span className="min-w-6 text-center text-sm">{line.quantity}</span><button onClick={() => changeQuantity(line, 1)} disabled={line.quantity >= available} className="p-1.5 disabled:opacity-30" aria-label="Sumar"><Plus size={14} /></button></div>
+                <div className="flex items-center rounded-full border border-border"><button onClick={() => changeQuantity(line, -1)} className="pop p-1.5" aria-label="Restar"><Minus size={14} /></button><span className="min-w-6 text-center text-sm">{line.quantity}</span><button onClick={() => changeQuantity(line, 1)} disabled={line.quantity >= available} className="pop p-1.5 disabled:opacity-30" aria-label="Sumar"><Plus size={14} /></button></div>
                 <span className="text-sm font-semibold">{money(line.product.price * line.quantity)}</span>
               </div>
             </div>
@@ -219,7 +220,7 @@ function CartDrawer() {
           <div className="flex justify-between text-sm"><span>Subtotal (sin envío)</span><span className="font-semibold">{money(subtotal)}</span></div>
           {transfer > 0 && <p className="mt-1 text-right text-xs text-primary">{money(subtotal * (1 - transfer / 100))} con transferencia</p>}
           <p className="mt-1 text-xs text-muted-foreground">El envío y el cupón se aplican en el siguiente paso.</p>
-          <button onClick={() => { setCartOpen(false); router.push('/checkout') }} className="mt-4 w-full rounded-full bg-primary py-3.5 text-sm font-bold uppercase tracking-wider text-primary-foreground hover:brightness-110">Iniciar compra</button>
+          <button onClick={() => { setCartOpen(false); router.push('/checkout') }} className="pop shine mt-4 w-full rounded-full bg-primary py-3.5 text-sm font-bold uppercase tracking-wider text-primary-foreground">Iniciar compra</button>
           <button onClick={() => setCartOpen(false)} className="mt-2 w-full py-2 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline">Ver más productos</button>
         </div>
       </>}
@@ -239,6 +240,6 @@ export function Shell({ children }: { children: ReactNode }) {
     {children}
     <Footer />
     <CartDrawer />
-    <a href={`https://wa.me/${content.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" aria-label="Escribinos por WhatsApp" className="fixed right-4 bottom-4 z-40 flex h-13 w-13 items-center justify-center rounded-full bg-[#25D366] p-3 text-white shadow-lg transition hover:scale-105"><WhatsAppIcon size={26} /></a>
+    <a href={`https://wa.me/${content.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" aria-label="Escribinos por WhatsApp" className="pop animate-ring fixed right-4 bottom-4 z-40 flex h-13 w-13 items-center justify-center rounded-full bg-[#25D366] p-3 text-white shadow-lg"><WhatsAppIcon size={26} /></a>
   </main>
 }

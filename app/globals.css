@@ -83,3 +83,46 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-feature-settings: 'tnum' 1;
 }
+
+/* ───────── Animaciones de la tienda: botones que se "inflan", tarjetas que flotan ───────── */
+/* Curva con rebote suave (sube un poquito más y vuelve), da la sensación de "inflarse". */
+:root { --spring: cubic-bezier(.34, 1.56, .64, 1); }
+
+.pop { transition: transform .35s var(--spring), box-shadow .3s ease, background-color .2s ease, color .2s ease, border-color .2s ease; will-change: transform; }
+.pop:not(:disabled):hover { transform: scale(1.07); }
+.pop:not(:disabled):active { transform: scale(.92); transition-duration: .12s; }
+.pop-soft { transition: transform .35s var(--spring), box-shadow .3s ease, border-color .2s ease, background-color .2s ease; }
+.pop-soft:hover { transform: scale(1.015); box-shadow: 0 10px 24px -14px rgb(53 23 25 / .35); }
+.pop-soft:active { transform: scale(.985); }
+
+/* Botón principal: además de inflarse, un brillo que cruza al pasar el mouse. */
+.shine { position: relative; overflow: hidden; isolation: isolate; }
+.shine::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / .35) 50%, transparent 70%); transform: translateX(-120%); transition: transform .7s ease; }
+.shine:hover::after { transform: translateX(120%); }
+.shine:not(:disabled):hover { box-shadow: 0 14px 30px -12px color-mix(in oklab, var(--primary) 70%, transparent); }
+
+/* Tarjetas que flotan al pasar el mouse. */
+.lift { transition: transform .45s var(--spring); }
+.lift:hover { transform: translateY(-8px); }
+.lift:hover .lift-shadow { box-shadow: 0 24px 40px -22px rgb(53 23 25 / .55); }
+.lift-shadow { transition: box-shadow .4s ease; }
+
+/* Al agregar al carrito: el ícono salta y el contador "late". */
+@keyframes bump { 0% { transform: scale(1); } 30% { transform: scale(1.45) rotate(-8deg); } 55% { transform: scale(.9) rotate(4deg); } 75% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.animate-bump { animation: bump .6s var(--spring); }
+@keyframes pop-in { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
+.animate-pop-in { animation: pop-in .45s var(--spring) both; }
+
+/* Botón flotante de WhatsApp: aro que respira. */
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgb(37 211 102 / .55); } 100% { box-shadow: 0 0 0 18px rgb(37 211 102 / 0); } }
+.animate-ring { animation: ring 2.2s ease-out infinite; }
+
+/* Entradas suaves de secciones y tarjetas. */
+@keyframes rise { from { transform: translateY(18px); opacity: .001; } to { transform: none; opacity: 1; } }
+.animate-rise { animation: rise .7s var(--spring) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pop, .pop-soft, .lift, .shine::after { transition: none !important; }
+  .pop:hover, .pop-soft:hover, .lift:hover { transform: none !important; }
+  .animate-bump, .animate-pop-in, .animate-ring, .animate-rise { animation: none !important; }
+}

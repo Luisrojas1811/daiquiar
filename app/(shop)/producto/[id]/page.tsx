@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useParams, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
-import { ChevronDown, CreditCard, Minus, Plus, RefreshCw, Ruler, X } from 'lucide-react'
+import { Check, ChevronDown, CreditCard, Minus, Plus, RefreshCw, Ruler, X } from 'lucide-react'
 import { ProductCard } from '@/components/shop/product-card'
 import { ShippingCalculator } from '@/components/shop/shipping-calculator'
 import { EMPTY_IMAGE, getStock, isLowQuantity, productImages, slugify, transferPercent, useStore } from '@/components/store'
@@ -36,6 +36,8 @@ function ProductView() {
   const [quantity, setQuantity] = useState(1)
   const [guide, setGuide] = useState(false)
   const [error, setError] = useState('')
+  const [added, setAdded] = useState(0)
+  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null)
   const colors = product?.colors ?? []
 
   // Si no vino un color en el link, se elige el primero que tenga stock.
@@ -66,6 +68,7 @@ function ProductView() {
     if (needColor) { setError('Elegí un color'); return }
     if (hasSizes && !size) { setError('Elegí un talle'); return }
     add(product!, color, size, qty)
+    setAdded(Date.now()); setTimeout(() => setAdded(0), 1800)
   }
 
   return <>
@@ -73,8 +76,8 @@ function ProductView() {
       <nav className="mb-5 flex flex-wrap gap-1.5 text-xs uppercase tracking-[0.12em] text-muted-foreground"><Link href="/" className="hover:text-primary">Inicio</Link><span>/</span>{product.category && <><Link href={`/categoria/${slugify(product.category)}`} className="hover:text-primary">{product.category}</Link><span>/</span></>}<span className="text-foreground">{product.name}</span></nav>
       <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
         <div className="flex flex-col-reverse gap-3 sm:flex-row">
-          {images.length > 1 && <div className="flex gap-2 overflow-x-auto sm:w-20 sm:flex-col">{images.map((url, i) => <button key={url} onClick={() => setActive(i)} className={cn('aspect-[3/4] w-16 shrink-0 overflow-hidden rounded-lg border-2 sm:w-full', i === active ? 'border-primary' : 'border-transparent opacity-70 hover:opacity-100')}><img src={url} alt="" className="h-full w-full object-cover" /></button>)}</div>}
-          <div className="relative aspect-[3/4] flex-1 overflow-hidden rounded-3xl bg-secondary"><img src={images[Math.min(active, images.length - 1)] || EMPTY_IMAGE} alt={product.name} className="h-full w-full object-cover" />
+          {images.length > 1 && <div className="flex gap-2 overflow-x-auto sm:w-20 sm:flex-col">{images.map((url, i) => <button key={url} onClick={() => setActive(i)} className={cn('pop aspect-[3/4] w-16 shrink-0 overflow-hidden rounded-lg border-2 sm:w-full', i === active ? 'border-primary' : 'border-transparent opacity-70 hover:opacity-100')}><img src={url} alt="" className="h-full w-full object-cover" /></button>)}</div>}
+          <div className="relative aspect-[3/4] flex-1 cursor-zoom-in overflow-hidden rounded-3xl bg-secondary" onMouseMove={e => { const r = e.currentTarget.getBoundingClientRect(); setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 }) }} onMouseLeave={() => setZoom(null)}><img key={images[Math.min(active, images.length - 1)]} src={images[Math.min(active, images.length - 1)] || EMPTY_IMAGE} alt={product.name} className="animate-rise h-full w-full object-cover transition-transform duration-300 ease-out" style={zoom ? { transform: 'scale(1.8)', transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined} />
             {off > 0 && <span className="absolute top-4 left-4 rounded-full bg-primary px-3 py-1.5 text-xs font-bold tracking-[0.15em] text-primary-foreground">{off}% OFF</span>}</div>
         </div>
 
@@ -86,19 +89,19 @@ function ProductView() {
 
           {colors.length > 0 && <div className="mt-7">
             <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em]">Color: <span className="font-normal normal-case tracking-normal">{color || 'elegí uno'}</span></p>
-            <div className="flex flex-wrap gap-2.5">{colors.map(c => { const ok = (hasSizes ? product.sizes : ['']).some(s => getStock(product, c.name, s) > 0); return <button key={c.name} onClick={() => { setColor(c.name); setChosen(''); setActive(0); setError('') }} title={c.name} aria-label={`Color ${c.name}`} className={cn('relative h-9 w-9 rounded-full border transition', color === c.name ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'border-foreground/20 hover:scale-110', !ok && 'opacity-40 after:absolute after:inset-0 after:m-auto after:h-px after:w-full after:rotate-45 after:bg-foreground')} style={{ background: c.hex }} /> })}</div>
+            <div className="flex flex-wrap gap-2.5">{colors.map(c => { const ok = (hasSizes ? product.sizes : ['']).some(s => getStock(product, c.name, s) > 0); return <button key={c.name} onClick={() => { setColor(c.name); setChosen(''); setActive(0); setError('') }} title={c.name} aria-label={`Color ${c.name}`} className={cn('pop relative h-9 w-9 rounded-full border', color === c.name ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'border-foreground/20 hover:scale-110', !ok && 'opacity-40 after:absolute after:inset-0 after:m-auto after:h-px after:w-full after:rotate-45 after:bg-foreground')} style={{ background: c.hex }} /> })}</div>
           </div>}
 
           {hasSizes && <div className="mt-7">
             <div className="mb-3 flex items-center justify-between"><p className="text-xs font-bold uppercase tracking-[0.18em]">Talle: <span className="font-normal normal-case tracking-normal">{size || 'elegí uno'}</span></p><button onClick={() => setGuide(true)} className="flex items-center gap-1.5 text-sm font-semibold text-primary underline-offset-4 hover:underline"><Ruler size={15} />Guía de talles</button></div>
-            <div className="flex flex-wrap gap-2">{product.sizes.map(option => { const ok = getStock(product, color, option) > 0; return <button key={option} disabled={!ok} onClick={() => { setChosen(option); setQuantity(1); setError('') }} className={cn('min-w-12 rounded-full border px-4 py-2.5 text-sm font-bold transition', size === option ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card hover:border-primary', !ok && 'cursor-not-allowed text-muted-foreground line-through opacity-50')}>{option}</button> })}</div>
+            <div className="flex flex-wrap gap-2">{product.sizes.map(option => { const ok = getStock(product, color, option) > 0; return <button key={option} disabled={!ok} onClick={() => { setChosen(option); setQuantity(1); setError('') }} className={cn('pop min-w-12 rounded-full border px-4 py-2.5 text-sm font-bold', size === option ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card hover:border-primary', !ok && 'cursor-not-allowed text-muted-foreground line-through opacity-50')}>{option}</button> })}</div>
           </div>}
 
           {!soldOut && available > 0 && <p className={cn('mt-4 text-sm font-bold', isLowQuantity(product, available) ? 'text-primary' : 'text-muted-foreground')}>{available === 1 ? '¡No te lo pierdas, es el último!' : isLowQuantity(product, available) ? `${content.low_stock_label} · quedan ${available}` : 'Stock disponible'}</p>}
 
           <div className="mt-6 flex gap-3">
-            <div className="flex items-center rounded-full border border-border bg-card"><button onClick={() => setQuantity(Math.max(1, qty - 1))} className="p-3" aria-label="Restar"><Minus size={16} /></button><span className="min-w-6 text-center font-bold">{qty}</span><button onClick={() => setQuantity(Math.min(available || 1, qty + 1))} disabled={qty >= available} className="p-3 disabled:opacity-30" aria-label="Sumar"><Plus size={16} /></button></div>
-            <button disabled={soldOut} onClick={addToCart} className="flex-1 rounded-full bg-primary py-4 text-sm font-bold uppercase tracking-[0.18em] text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">{soldOut ? content.out_of_stock_label : content.add_to_cart_label}</button>
+            <div className="flex items-center rounded-full border border-border bg-card"><button onClick={() => setQuantity(Math.max(1, qty - 1))} className="pop p-3" aria-label="Restar"><Minus size={16} /></button><span className="min-w-6 text-center font-bold">{qty}</span><button onClick={() => setQuantity(Math.min(available || 1, qty + 1))} disabled={qty >= available} className="pop p-3 disabled:opacity-30" aria-label="Sumar"><Plus size={16} /></button></div>
+            <button disabled={soldOut} onClick={addToCart} className="pop shine flex flex-1 items-center justify-center gap-2 rounded-full bg-primary py-4 text-sm font-bold uppercase tracking-[0.18em] text-primary-foreground shadow-lg shadow-primary/20 disabled:cursor-not-allowed disabled:opacity-40">{soldOut ? content.out_of_stock_label : added ? <span key={added} className="animate-pop-in flex items-center gap-2"><Check size={18} />¡Agregado!</span> : content.add_to_cart_label}</button>
           </div>
           {error && <p className="mt-2 text-sm font-bold text-primary">{error}</p>}
 

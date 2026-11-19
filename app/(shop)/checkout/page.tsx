@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Check, ChevronDown, Copy, Lock, ShoppingBag, Tag } from 'lucide-react'
+import { ArrowLeft, Check, ChevronDown, Copy, Lock, ShoppingCart, Tag } from 'lucide-react'
 import { EMPTY_IMAGE, Logo, WhatsAppIcon, colorImage, lineKey, useStore } from '@/components/store'
 import { ZONE_NAMES, zoneForZip } from '@/lib/shipping-zones'
 import { computeTotals, money, PAYMENT_NAMES, paymentOptions, shippingOptions, type Coupon, type PaymentMethod, type ShippingMethod } from '@/lib/pricing'
@@ -19,7 +19,7 @@ function F({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputEl
   return <label className={cn('block', className)}><span className="mb-1.5 block text-xs font-semibold text-foreground/80">{label}</span><input {...props} className={input} /></label>
 }
 function Option({ checked, onSelect, title, detail, right }: { checked: boolean; onSelect: () => void; title: string; detail?: string; right?: string }) {
-  return <button type="button" onClick={onSelect} className={cn('flex w-full items-center gap-4 rounded-xl border bg-card px-4 py-4 text-left transition', checked ? 'border-primary ring-2 ring-primary/15' : 'border-border hover:border-primary/40')}>
+  return <button type="button" onClick={onSelect} className={cn('pop-soft flex w-full items-center gap-4 rounded-xl border bg-card px-4 py-4 text-left', checked ? 'border-primary ring-2 ring-primary/15' : 'border-border hover:border-primary/40')}>
     <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', checked ? 'border-primary' : 'border-border')}>{checked && <span className="h-2.5 w-2.5 rounded-full bg-primary" />}</span>
     <span className="flex-1"><span className="block text-[15px] font-semibold">{title}</span>{detail && <span className="block text-xs text-muted-foreground">{detail}</span>}</span>
     {right && <span className="text-sm font-bold">{right}</span>}
@@ -98,7 +98,7 @@ export default function CheckoutPage() {
   if (done) {
     const whatsapp = `https://wa.me/${content.whatsapp_number.replace(/\D/g, '')}?text=${encodeURIComponent(done.whatsappText)}`
     return <>{header}<section className="mx-auto max-w-xl px-4 py-12 text-center sm:px-6">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground"><Check size={30} /></div>
+      <div className="animate-pop-in mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground"><Check size={30} /></div>
       <h1 className="mt-6 font-display text-3xl font-semibold text-primary md:text-4xl">¡Gracias por tu compra!</h1>
       <p className="mt-2 text-muted-foreground">Tu pedido <b className="text-foreground">#{done.id}</b> quedó registrado. Te enviamos el detalle y nos vamos a contactar para coordinar.</p>
       <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-left">
@@ -106,12 +106,12 @@ export default function CheckoutPage() {
         {done.transferDetails && <div className="mt-5 rounded-xl bg-secondary p-4"><p className="text-xs font-bold uppercase tracking-wider text-primary">Datos para transferir</p><p className="mt-2 text-sm whitespace-pre-line">{done.transferDetails}</p>
           <button onClick={() => { navigator.clipboard.writeText(done.transferDetails); setCopied(true) }} className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-primary">{copied ? <Check size={13} /> : <Copy size={13} />}{copied ? 'Copiado' : 'Copiar datos'}</button></div>}
       </div>
-      <a href={whatsapp} target="_blank" rel="noreferrer" className="mt-6 flex items-center justify-center gap-2 rounded-full bg-[#25D366] py-4 text-sm font-bold text-white hover:brightness-105"><WhatsAppIcon size={20} />{done.transferDetails ? 'Enviar comprobante por WhatsApp' : 'Coordinar por WhatsApp'}</a>
+      <a href={whatsapp} target="_blank" rel="noreferrer" className="pop mt-6 flex items-center justify-center gap-2 rounded-full bg-[#25D366] py-4 text-sm font-bold text-white hover:brightness-105"><WhatsAppIcon size={20} />{done.transferDetails ? 'Enviar comprobante por WhatsApp' : 'Coordinar por WhatsApp'}</a>
       <Link href="/" className="mt-4 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline">Volver a la tienda</Link>
     </section></>
   }
 
-  if (!cartLines.length) return <>{header}<section className="mx-auto max-w-md px-4 py-24 text-center"><ShoppingBag size={40} className="mx-auto text-muted-foreground" /><h1 className="mt-4 text-2xl font-bold">Tu carrito está vacío</h1><Link href="/productos" className="mt-6 inline-block rounded-full bg-primary px-7 py-3 text-sm font-bold text-primary-foreground">Ver productos</Link></section></>
+  if (!cartLines.length) return <>{header}<section className="mx-auto max-w-md px-4 py-24 text-center"><ShoppingCart size={40} className="mx-auto text-muted-foreground" /><h1 className="mt-4 text-2xl font-bold">Tu carrito está vacío</h1><Link href="/productos" className="mt-6 inline-block rounded-full bg-primary px-7 py-3 text-sm font-bold text-primary-foreground">Ver productos</Link></section></>
 
   const summary = <div className="space-y-4">
     <ul className="space-y-4">{cartLines.map(line => <li key={lineKey(line)} className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export default function CheckoutPage() {
       <span className="text-sm font-semibold">{money(line.product.price * line.quantity)}</span>
     </li>)}</ul>
     <div className="border-t border-border pt-4">{coupon ? <div className="flex items-center justify-between rounded-lg bg-secondary px-3 py-2 text-sm"><span className="flex items-center gap-2 font-semibold text-primary"><Tag size={14} />{coupon.code}</span><button onClick={() => { setCoupon(null); setCouponCode('') }} className="text-xs text-muted-foreground underline">Quitar</button></div>
-      : <div className="flex gap-2"><input value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} placeholder="Cupón de descuento" className={cn(input, 'h-11')} /><button onClick={applyCoupon} disabled={!couponCode} className="rounded-lg border border-primary px-4 text-sm font-semibold text-primary disabled:opacity-40">Aplicar</button></div>}
+      : <div className="flex gap-2"><input value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} placeholder="Cupón de descuento" className={cn(input, 'h-11')} /><button onClick={applyCoupon} disabled={!couponCode} className="pop rounded-lg border border-primary px-4 text-sm font-semibold text-primary disabled:opacity-40">Aplicar</button></div>}
       {couponError && <p className="mt-1.5 text-xs text-primary">{couponError}</p>}</div>
     <dl className="space-y-2 border-t border-border pt-4 text-sm">
       <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd>{money(totals.subtotal)}</dd></div>
@@ -133,7 +133,7 @@ export default function CheckoutPage() {
 
   const steps = ['Entrega', 'Pago', 'Confirmación']
   return <>{header}
-    <div className="border-b border-border bg-secondary/50 lg:hidden"><button onClick={() => setSummaryOpen(o => !o)} className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 text-sm sm:px-6"><span className="flex items-center gap-2 font-semibold text-primary"><ShoppingBag size={16} />{summaryOpen ? 'Ocultar' : 'Ver'} resumen <ChevronDown size={15} className={cn('transition', summaryOpen && 'rotate-180')} /></span><b className="text-base">{money(totals.total)}</b></button>{summaryOpen && <div className="px-4 pb-5 sm:px-6">{summary}</div>}</div>
+    <div className="border-b border-border bg-secondary/50 lg:hidden"><button onClick={() => setSummaryOpen(o => !o)} className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 text-sm sm:px-6"><span className="flex items-center gap-2 font-semibold text-primary"><ShoppingCart size={16} />{summaryOpen ? 'Ocultar' : 'Ver'} resumen <ChevronDown size={15} className={cn('transition', summaryOpen && 'rotate-180')} /></span><b className="text-base">{money(totals.total)}</b></button>{summaryOpen && <div className="px-4 pb-5 sm:px-6">{summary}</div>}</div>
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-8 sm:px-6 lg:grid-cols-[1fr_380px]">
       <div>
         <ol className="mb-8 flex items-center gap-2 text-xs font-semibold">{steps.map((label, i) => <li key={label} className="flex items-center gap-2"><span className={cn('flex h-6 w-6 items-center justify-center rounded-full', i + 1 < step ? 'bg-primary text-primary-foreground' : i + 1 === step ? 'bg-primary text-primary-foreground ring-4 ring-primary/15' : 'bg-accent text-muted-foreground')}>{i + 1 < step ? <Check size={13} /> : i + 1}</span><span className={i + 1 === step ? 'text-foreground' : 'text-muted-foreground'}>{label}</span>{i < steps.length - 1 && <span className="mx-1 h-px w-6 bg-border sm:w-12" />}</li>)}</ol>
@@ -154,7 +154,7 @@ export default function CheckoutPage() {
             </div>
           </section>
           {error && <p className="rounded-lg bg-primary/8 px-4 py-3 text-sm font-medium text-primary">{error}</p>}
-          <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:justify-between"><Link href="/productos" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"><ArrowLeft size={15} />Seguir comprando</Link><button onClick={next} className="w-full rounded-full bg-primary px-10 py-4 text-sm font-bold uppercase tracking-wider text-primary-foreground hover:brightness-110 sm:w-auto">Continuar</button></div>
+          <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:justify-between"><Link href="/productos" className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"><ArrowLeft size={15} />Seguir comprando</Link><button onClick={next} className="pop shine w-full rounded-full bg-primary px-10 py-4 text-sm font-bold uppercase tracking-wider text-primary-foreground sm:w-auto">Continuar</button></div>
         </div>
 
         : <div className="space-y-9">
@@ -164,7 +164,7 @@ export default function CheckoutPage() {
             <p className="mt-3 text-xs text-muted-foreground">{content.cart_note}</p></section>
           <section><h2 className="mb-3 text-lg font-bold">¿Querés aclarar algo?</h2><textarea value={form.notes} onChange={set('notes')} placeholder="Ej.: horario para recibir, es para regalo…" className={cn(input, 'h-24 py-3')} /></section>
           {error && <p className="rounded-lg bg-primary/8 px-4 py-3 text-sm font-medium text-primary">{error}</p>}
-          <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:justify-between"><button onClick={() => setStep(1)} className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"><ArrowLeft size={15} />Volver</button><button onClick={finish} disabled={loading} className="w-full rounded-full bg-primary px-10 py-4 text-sm font-bold uppercase tracking-wider text-primary-foreground hover:brightness-110 disabled:opacity-50 sm:w-auto">{loading ? 'Confirmando…' : 'Finalizar compra'}</button></div>
+          <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:justify-between"><button onClick={() => setStep(1)} className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-primary"><ArrowLeft size={15} />Volver</button><button onClick={finish} disabled={loading} className="pop shine w-full rounded-full bg-primary px-10 py-4 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-50 sm:w-auto">{loading ? 'Confirmando…' : 'Finalizar compra'}</button></div>
         </div>}
       </div>
       <aside className="hidden lg:block"><div className="sticky top-6 rounded-2xl border border-border bg-card p-6"><h2 className="mb-5 font-bold">Resumen de compra</h2>{summary}</div></aside>

@@ -30,7 +30,7 @@ export function ShippingCalculator({ subtotal = 0, compact = false }: { subtotal
       <ul className="mt-2 divide-y divide-border">{shippingOptions(content, zip).map(option => <li key={option.id} className="flex justify-between gap-4 py-2 text-sm"><span>{option.label}</span><b className="whitespace-nowrap">{option.cost === 0 ? 'Gratis' : free && option.id !== 'pickup' ? <span className="text-primary">¡Gratis!</span> : money(option.cost ?? 0)}</b></li>)}</ul>
     </div> : <form onSubmit={calculate} className="mt-3 flex gap-2">
       <input value={draft} onChange={e => setDraft(e.target.value)} inputMode="numeric" placeholder="Tu código postal" aria-label="Código postal" className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary" />
-      <button className="rounded-lg border border-primary px-4 text-sm font-semibold text-primary hover:bg-primary hover:text-primary-foreground">Calcular</button>
+      <button className="pop rounded-lg border border-primary px-4 text-sm font-semibold text-primary hover:bg-primary hover:text-primary-foreground">Calcular</button>
     </form>}
     {error && <p className="mt-2 text-xs text-primary">{error}</p>}
     {!zone && <a href="https://www.correoargentino.com.ar/formularios/cpa" target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-muted-foreground underline underline-offset-2">No sé mi código postal</a>}
