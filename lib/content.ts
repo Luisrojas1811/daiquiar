@@ -132,7 +132,7 @@ export const CONTENT_FIELDS: ContentField[] = [
   // Pagos
   { key: 'payment_transfer_enabled', group: G[11], type: 'toggle', label: 'Aceptar transferencia', default: '1' },
   { key: 'payment_transfer_discount', group: G[11], type: 'number', label: 'Descuento por transferencia (%)', default: '10' },
-  { key: 'payment_transfer_details', group: G[11], type: 'textarea', label: 'Datos para transferir', default: 'Alias: DAIQUIAR.TIENDA', hint: 'Se muestran al confirmar el pedido.' },
+  { key: 'payment_transfer_details', group: G[11], type: 'textarea', label: 'Datos para transferir', default: 'Te enviamos los datos para transferir por WhatsApp.', hint: 'Se muestran al confirmar el pedido. Poné tu alias, CBU y titular.' },
   { key: 'payment_cash_enabled', group: G[11], type: 'toggle', label: 'Aceptar efectivo', default: '1' },
 
   // Guía de talles
