@@ -99,8 +99,8 @@ export default function CheckoutPage() {
     const whatsapp = `https://wa.me/${content.whatsapp_number.replace(/\D/g, '')}?text=${encodeURIComponent(done.whatsappText)}`
     return <>{header}<section className="mx-auto max-w-xl px-4 py-12 text-center sm:px-6">
       <div className="animate-pop-in mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground"><Check size={30} /></div>
-      <h1 className="mt-6 font-display text-3xl font-semibold text-primary md:text-4xl">¡Gracias por tu compra!</h1>
-      <p className="mt-2 text-muted-foreground">Tu pedido <b className="text-foreground">#{done.id}</b> quedó registrado. Te enviamos el detalle y nos vamos a contactar para coordinar.</p>
+      <h1 className="mt-6 font-display text-3xl font-semibold text-primary md:text-4xl">{content.thanks_title}</h1>
+      <p className="mt-2 text-muted-foreground">Pedido <b className="text-foreground">#{done.id}</b>. {content.thanks_text}</p>
       <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-left">
         <div className="flex justify-between text-sm"><span>Total</span><b>{money(done.total)}</b></div>
         {done.transferDetails && <div className="mt-5 rounded-xl bg-secondary p-4"><p className="text-xs font-bold uppercase tracking-wider text-primary">Datos para transferir</p><p className="mt-2 text-sm whitespace-pre-line">{done.transferDetails}</p>

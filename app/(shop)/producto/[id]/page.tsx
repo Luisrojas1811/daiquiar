@@ -118,7 +118,7 @@ function ProductView() {
         </div>
       </div>
     </section>
-    {related.length > 0 && <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6"><h2 className="mb-8 text-center font-display text-3xl font-semibold">También te puede gustar</h2><div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4">{related.map(p => <ProductCard key={p.id} product={p} />)}</div></section>}
+    {related.length > 0 && <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6"><h2 className="mb-8 text-center font-display text-3xl font-semibold">{content.related_title}</h2><div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4">{related.map(p => <ProductCard key={p.id} product={p} />)}</div></section>}
     {guide && <SizeGuide raw={content.size_guide_tables} initial={Math.max(0, parseSizeGuide(content.size_guide_tables).tables.findIndex(t => t.rows.some(r => product.sizes.includes(r[0]))))} onClose={() => setGuide(false)} />}
   </>
 }

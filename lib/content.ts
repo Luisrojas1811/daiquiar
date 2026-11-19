@@ -47,6 +47,14 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'hero_description', group: G[1], type: 'textarea', label: 'Descripción', default: 'Indumentaria femenina seleccionada con amor. Diseños únicos, calidad y envíos a todo el país.' },
   { key: 'hero_cta_primary', group: G[1], type: 'text', label: 'Botón principal', default: 'Comprar ahora' },
   { key: 'hero_cta_secondary', group: G[1], type: 'text', label: 'Botón secundario', default: 'Ver lookbook' },
+  { key: 'carousel_badge', group: G[1], type: 'text', label: 'Carrusel · texto chico sobre cada producto', default: 'Destacado ♡', hint: 'El carrusel muestra los productos marcados como Destacado (★) en Productos.' },
+  { key: 'carousel_cta', group: G[1], type: 'text', label: 'Carrusel · botón de cada producto', default: 'Lo quiero' },
+  { key: 'banner_image', group: G[1], type: 'image', label: 'Banner bordó · foto', default: 'https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=1000&q=85', hint: 'El bloque bordó grande que está en la mitad de la portada.' },
+  { key: 'banner_eyebrow', group: G[1], type: 'text', label: 'Banner bordó · texto chico', default: 'Nueva colección' },
+  { key: 'banner_title', group: G[1], type: 'text', label: 'Banner bordó · título', default: 'Hecha para brillar' },
+  { key: 'banner_text', group: G[1], type: 'textarea', label: 'Banner bordó · texto', default: 'Prendas pensadas para que te sientas increíble, todos los días.' },
+  { key: 'banner_cta', group: G[1], type: 'text', label: 'Banner bordó · botón', default: 'Descubrir' },
+  { key: 'instagram_title', group: G[1], type: 'text', label: 'Título de la sección de Instagram', default: 'Seguinos en Instagram', hint: 'Si lo dejás vacío, la sección se oculta.' },
 
   // Menú
   { key: 'nav_new_label', group: G[2], type: 'text', label: 'Link del menú hacia los productos nuevos', default: 'Nuevos ingresos' },
@@ -68,14 +76,19 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'low_stock_label', group: G[4], type: 'text', label: 'Cartel de poco stock', default: 'Queda poco stock', hint: 'Aparece en el producto cuando el stock llega al umbral que definiste para ese producto.' },
   { key: 'out_of_stock_label', group: G[4], type: 'text', label: 'Cartel sin stock', default: 'Sin stock' },
   { key: 'add_to_cart_label', group: G[4], type: 'text', label: 'Botón de agregar al carrito', default: 'Agregar al carrito' },
+  { key: 'featured_eyebrow', group: G[4], type: 'text', label: 'Destacados · texto chico', default: 'Los más elegidos' },
+  { key: 'featured_title', group: G[4], type: 'text', label: 'Destacados · título', default: 'Favoritos de la semana' },
+  { key: 'related_title', group: G[4], type: 'text', label: 'Título de productos relacionados', default: 'También te puede gustar' },
 
   // Beneficios
-  { key: 'benefit_1_title', group: G[5], type: 'text', label: 'Beneficio 1 · título', default: 'Envíos a todo el país' },
-  { key: 'benefit_1_description', group: G[5], type: 'textarea', label: 'Beneficio 1 · descripción', default: 'Coordinamos el envío con vos por WhatsApp' },
-  { key: 'benefit_2_title', group: G[5], type: 'text', label: 'Beneficio 2 · título', default: 'Compra simple' },
-  { key: 'benefit_2_description', group: G[5], type: 'textarea', label: 'Beneficio 2 · descripción', default: 'Coordinamos tu pedido por WhatsApp' },
-  { key: 'benefit_3_title', group: G[5], type: 'text', label: 'Beneficio 3 · título', default: 'Atención cercana' },
-  { key: 'benefit_3_description', group: G[5], type: 'textarea', label: 'Beneficio 3 · descripción', default: 'Te ayudamos a elegir tu look' },
+  { key: 'benefit_1_title', group: G[5], type: 'text', label: 'Beneficio 1 · título', hint: 'Podés usar {envio_gratis} y {descuento}: se completan solos con los montos de Envíos y pagos.', default: 'Envío gratis desde {envio_gratis}' },
+  { key: 'benefit_1_description', group: G[5], type: 'textarea', label: 'Beneficio 1 · descripción', default: 'Calculá el costo con tu código postal' },
+  { key: 'benefit_2_title', group: G[5], type: 'text', label: 'Beneficio 2 · título', default: '{descuento}% OFF por transferencia' },
+  { key: 'benefit_2_description', group: G[5], type: 'textarea', label: 'Beneficio 2 · descripción', default: 'Pagás fácil y seguro' },
+  { key: 'benefit_3_title', group: G[5], type: 'text', label: 'Beneficio 3 · título', default: 'Cambios sin vueltas' },
+  { key: 'benefit_3_description', group: G[5], type: 'textarea', label: 'Beneficio 3 · descripción', default: 'Consultanos dentro de los 7 días de recibido' },
+  { key: 'benefit_4_title', group: G[5], type: 'text', label: 'Beneficio 4 · título', default: 'Diseños únicos' },
+  { key: 'benefit_4_description', group: G[5], type: 'textarea', label: 'Beneficio 4 · descripción', default: 'Prendas seleccionadas con amor' },
 
   // Carrito
   { key: 'cart_title', group: G[6], type: 'text', label: 'Título del carrito', default: 'Tu carrito' },
@@ -85,6 +98,8 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'cart_how_text', group: G[6], type: 'textarea', label: 'Texto del recuadro "cómo continúa"', default: 'Confirmamos tu pedido y coordinamos el pago y el envío por WhatsApp.' },
   { key: 'cart_note', group: G[6], type: 'textarea', label: 'Aviso al pie del carrito', default: 'Podés pagar por transferencia o efectivo.' },
   { key: 'whatsapp_intro', group: G[6], type: 'text', label: 'Primera línea del mensaje de WhatsApp', default: 'Hola Daiquiar Indumentaria! Quiero confirmar el pedido', hint: 'Después de esta frase se agrega automáticamente el número de pedido y el detalle.' },
+  { key: 'thanks_title', group: G[6], type: 'text', label: 'Compra confirmada · título', default: '¡Gracias por tu compra!' },
+  { key: 'thanks_text', group: G[6], type: 'textarea', label: 'Compra confirmada · texto', default: 'Tu pedido quedó registrado. Te escribimos por WhatsApp para coordinar el pago y la entrega.' },
 
   // Footer
   { key: 'footer_text', group: G[7], type: 'textarea', label: 'Texto de presentación', default: 'HEY BBY! Somos Daiquiar. Diseño y calidad a precios únicos. CABA, Buenos Aires. Envíos a todo el país.' },

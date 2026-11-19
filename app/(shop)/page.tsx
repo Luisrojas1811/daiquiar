@@ -37,16 +37,12 @@ export default function HomePage() {
   const latest = products.slice(0, 8)
   const freeFrom = Number(content.shipping_free_from) || 0
   const transfer = transferPercent(content)
-  const sale = products.filter(p => p.oldPrice && p.oldPrice > p.price)
   const igImages = products.flatMap(p => productImages(p).slice(0, 1)).slice(0, 6)
   const instagramHandle = content.instagram_url.replace(/\/$/, '').split('/').pop()
 
-  const perks = [
-    { icon: Truck, title: freeFrom ? `Envío gratis desde ${money(freeFrom)}` : 'Envíos a todo el país', text: 'Calculá el costo con tu código postal' },
-    { icon: CreditCard, title: transfer ? `${transfer}% OFF por transferencia` : 'Transferencia o efectivo', text: 'Pagás fácil y seguro' },
-    { icon: RefreshCw, title: 'Cambios sin vueltas', text: content.returns_text },
-    { icon: Sparkles, title: 'Diseños únicos', text: 'Prendas seleccionadas con amor' },
-  ]
+  // Barra de beneficios: textos desde el panel; {envio_gratis} y {descuento} se completan solos.
+  const fill = (text: string) => text.replace(/\{envio_gratis\}/g, freeFrom ? money(freeFrom) : '').replace(/\{descuento\}/g, String(transfer))
+  const perks = [1, 2, 3, 4].map((n, i) => ({ icon: [Truck, CreditCard, RefreshCw, Sparkles][i], title: fill(content[`benefit_${n}_title`] ?? ''), text: fill(content[`benefit_${n}_description`] ?? '') })).filter(p => p.title.trim())
 
   return <>
     {/* 1 · Carrusel de destacados */}
@@ -73,19 +69,19 @@ export default function HomePage() {
 
     {/* 4 · Los más elegidos */}
     {featured.length > 0 && <section className="bg-secondary/70 py-20"><div className="mx-auto max-w-7xl px-4 sm:px-6">
-      <SectionTitle eyebrow="Los más elegidos" title="Favoritos de la semana" />
+      <SectionTitle eyebrow={content.featured_eyebrow} title={content.featured_title} />
       <ProductRail products={featured} />
     </div></section>}
 
     {/* 5 · Banner editorial */}
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
       <div className="grid overflow-hidden rounded-[2rem] bg-primary text-primary-foreground md:grid-cols-2">
-        <img src={content.hero_image} alt="" className="h-72 w-full object-cover md:h-full" />
+        <img src={content.banner_image || content.hero_image} alt="" className="h-72 w-full object-cover md:h-full" />
         <div className="flex flex-col justify-center p-10 md:p-16">
-          <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-primary-foreground/70">{sale.length ? 'Ofertas' : 'Nueva colección'}</p>
-          <h2 className="mt-4 font-display text-4xl leading-tight font-semibold md:text-5xl">{sale.length ? 'Tus favoritos con descuento' : 'Hecha para brillar'}</h2>
-          <p className="mt-4 max-w-sm text-primary-foreground/80">{sale.length ? `${sale.length} prendas con precio especial por tiempo limitado.` : content.hero_description}</p>
-          <Link href="/productos" className="pop shine mt-8 inline-flex w-fit items-center gap-3 rounded-full bg-primary-foreground px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-primary hover:bg-secondary">{sale.length ? 'Ver ofertas' : 'Descubrir'} <ArrowRight size={16} /></Link>
+          <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-primary-foreground/70">{content.banner_eyebrow}</p>
+          <h2 className="mt-4 font-display text-4xl leading-tight font-semibold md:text-5xl">{content.banner_title}</h2>
+          <p className="mt-4 max-w-sm text-primary-foreground/80">{content.banner_text}</p>
+          <Link href="/productos" className="pop shine mt-8 inline-flex w-fit items-center gap-3 rounded-full bg-primary-foreground px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] text-primary hover:bg-secondary">{content.banner_cta || 'Ver más'} <ArrowRight size={16} /></Link>
         </div>
       </div>
     </section>
@@ -98,9 +94,9 @@ export default function HomePage() {
     </section>
 
     {/* 7 · Instagram */}
-    {igImages.length > 0 && <section className="border-t border-border bg-card py-16">
+    {igImages.length > 0 && content.instagram_title.trim() && <section className="border-t border-border bg-card py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center"><InstagramIcon size={28} /><h2 className="font-display text-2xl font-semibold md:text-3xl">Seguinos en Instagram</h2><a href={content.instagram_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary">@{instagramHandle}</a></div>
+        <div className="mb-8 flex flex-col items-center gap-3 text-center"><InstagramIcon size={28} /><h2 className="font-display text-2xl font-semibold md:text-3xl">{content.instagram_title}</h2><a href={content.instagram_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary">@{instagramHandle}</a></div>
         <div className="grid grid-cols-3 gap-2 md:grid-cols-6">{igImages.map((src, i) => <a key={i} href={content.instagram_url} target="_blank" rel="noreferrer" className="pop group relative aspect-square overflow-hidden rounded-xl"><img src={src} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" /><span className="absolute inset-0 flex items-center justify-center bg-primary/0 text-primary-foreground opacity-0 transition group-hover:bg-primary/50 group-hover:opacity-100"><InstagramIcon size={24} /></span></a>)}</div>
       </div>
     </section>}
