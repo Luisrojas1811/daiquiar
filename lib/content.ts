@@ -127,6 +127,8 @@ export const CONTENT_FIELDS: ContentField[] = [
   // Contacto
   { key: 'whatsapp_number', group: G[9], type: 'phone', label: 'WhatsApp de la tienda', default: '5491125256023', hint: 'Con 549 + código de área, sin espacios ni signos. Ej.: 5491125256023 (11 2525-6023). Acá llegan los pedidos.' },
   { key: 'instagram_url', group: G[9], type: 'url', label: 'Link de Instagram', default: 'https://instagram.com/daiquiar.indumentaria' },
+  // Pasos de "Puesta en marcha" que la dueña marcó como listos (lo maneja el panel).
+  { key: 'setup_done', group: G[9], type: 'json', label: 'Puesta en marcha', default: '[]' },
   { key: 'order_notify_email', group: G[9], type: 'text', label: 'Email donde llegan los pedidos', default: '', hint: 'Cada compra nueva te llega a este email con todo el detalle. Podés poner varios separados por coma.' },
   { key: 'store_location', group: G[9], type: 'text', label: 'Ubicación / showroom', default: 'CABA, Buenos Aires' },
 

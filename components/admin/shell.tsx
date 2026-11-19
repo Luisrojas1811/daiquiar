@@ -4,13 +4,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import useSWR from 'swr'
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
-import { Boxes, ExternalLink, Ruler, FolderTree, Home, LockKeyhole, LogOut, Menu, Palette, Settings, ShoppingBag, Shirt, Tag, Truck, Users, X } from 'lucide-react'
+import { Boxes, ExternalLink, Rocket, Ruler, FolderTree, Home, LockKeyhole, LogOut, Menu, Palette, Settings, ShoppingBag, Shirt, Tag, Truck, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button, Input, fetcher } from '@/components/admin/ui'
 
 const NAV = [
   { section: 'General', items: [
     { href: '/admin', label: 'Inicio', icon: Home },
+    { href: '/admin/puesta-en-marcha', label: 'Puesta en marcha', icon: Rocket },
     { href: '/admin/pedidos', label: 'Pedidos', icon: ShoppingBag, badge: 'pending' },
     { href: '/admin/clientas', label: 'Clientas', icon: Users },
   ] },

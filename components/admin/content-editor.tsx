@@ -8,7 +8,7 @@ import { uploadImages } from '@/components/admin/upload'
 import { CONTENT_FIELDS, DEFAULT_CONTENT, type ContentField, type SiteContent } from '@/lib/content'
 import { cn } from '@/lib/utils'
 
-function FieldInput({ field, value, onChange }: { field: ContentField; value: string; onChange: (next: string) => void }) {
+export function FieldInput({ field, value, onChange }: { field: ContentField; value: string; onChange: (next: string) => void }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const changed = value !== field.default

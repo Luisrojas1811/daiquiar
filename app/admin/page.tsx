@@ -2,9 +2,29 @@
 
 import Link from 'next/link'
 import useSWR from 'swr'
-import { AlertTriangle, ArrowRight, ArrowUpRight, Plus, ShoppingBag, Tag, TrendingDown, TrendingUp } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Rocket, ArrowUpRight, Plus, ShoppingBag, Tag, TrendingDown, TrendingUp } from 'lucide-react'
 import { Badge, ButtonLink, Card, EmptyState, PageHeader, Skeleton, STATUS_TONE, dateTime, fetcher, money } from '@/components/admin/ui'
 import { ORDER_STATUSES } from '@/lib/order-status'
+import { setupStatus } from '@/components/admin/setup'
+import { DEFAULT_CONTENT, type SiteContent } from '@/lib/content'
+import type { Product } from '@/lib/types'
+
+// Aviso con el progreso de "Puesta en marcha" mientras falten pasos.
+function SetupBanner() {
+  const { data: content } = useSWR<SiteContent>('/api/content', fetcher)
+  const { data: products } = useSWR<Product[]>('/api/catalog?all=1', fetcher)
+  const { data: status } = useSWR<{ email: boolean }>('/api/admin/status', fetcher)
+  if (!content || !products) return null
+  const { done, total, steps } = setupStatus({ content: { ...DEFAULT_CONTENT, ...content }, products, emailReady: Boolean(status?.email) })
+  if (done === total) return null
+  const next = steps.find(s => !s.done && !s.optional)
+  return <Link href="/admin/puesta-en-marcha" className="mb-6 flex items-center gap-4 rounded-2xl bg-primary px-5 py-4 text-primary-foreground shadow-lg transition hover:brightness-110">
+    <Rocket size={22} className="shrink-0" />
+    <span className="min-w-0 flex-1"><b className="block">Completá la puesta en marcha · {done} de {total}</b><span className="block truncate text-sm opacity-80">Siguiente: {next?.title}</span>
+      <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-primary-foreground/25"><span className="block h-full rounded-full bg-primary-foreground" style={{ width: `${(done / total) * 100}%` }} /></span></span>
+    <ArrowRight size={18} className="shrink-0" />
+  </Link>
+}
 
 type Stats = {
   monthRevenue: number; prevMonthRevenue: number; monthOrders: number; prevMonthOrders: number; averageTicket: number
@@ -56,6 +76,7 @@ export default function AdminHome() {
   return <>
     <PageHeader title={`${greeting} 👋`} description="Así viene tu tienda hoy."
       actions={<><ButtonLink href="/admin/promociones" icon={<Tag size={16} />}>Crear cupón</ButtonLink><ButtonLink href="/admin/productos/nuevo" variant="primary" icon={<Plus size={16} />}>Nuevo producto</ButtonLink></>} />
+    <SetupBanner />
     {error && <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{error.message}</p>}
 
     {data && data.pendingOrders > 0 && <Link href="/admin/pedidos?estado=pending" className="mb-6 flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4 text-sm transition hover:bg-primary/8">
