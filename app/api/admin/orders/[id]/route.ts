@@ -3,6 +3,7 @@ import { sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { isAdminRequest } from '@/lib/auth'
 import { fetchOrders, mapOrder, ORDER_STATUS_IDS } from '@/lib/orders'
+import { variantKey } from '@/lib/stock'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         if (order.status === 'cancelled') throw new Error('CANCELLED')
         if (body.status === 'cancelled') {
           for (const item of order.items) {
-            if (item.size) await tx.execute(sql`UPDATE products SET size_stock = jsonb_set(size_stock, ARRAY[${item.size}], to_jsonb(COALESCE((size_stock->>${item.size})::int, 0) + ${item.quantity})) WHERE id = ${item.id} AND ${item.size} = ANY(sizes)`)
+            const key = variantKey(item.color ?? '', item.size)
+            if (key) await tx.execute(sql`UPDATE products SET size_stock = jsonb_set(size_stock, ARRAY[${key}], to_jsonb(COALESCE((size_stock->>${key})::int, 0) + ${item.quantity})) WHERE id = ${item.id} AND size_stock ? ${key}`)
             else await tx.execute(sql`UPDATE products SET stock = stock + ${item.quantity} WHERE id = ${item.id}`)
           }
         }

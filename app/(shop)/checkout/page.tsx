@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Check, ChevronDown, Copy, Lock, ShoppingBag, Tag } from 'lucide-react'
-import { EMPTY_IMAGE, Logo, WhatsAppIcon, productImages, useStore } from '@/components/store'
+import { EMPTY_IMAGE, Logo, WhatsAppIcon, colorImage, lineKey, useStore } from '@/components/store'
+import { ZONE_NAMES, zoneForZip } from '@/lib/shipping-zones'
 import { computeTotals, money, PAYMENT_NAMES, paymentOptions, shippingOptions, type Coupon, type PaymentMethod, type ShippingMethod } from '@/lib/pricing'
 import { cn } from '@/lib/utils'
 
@@ -26,7 +27,7 @@ function Option({ checked, onSelect, title, detail, right }: { checked: boolean;
 }
 
 export default function CheckoutPage() {
-  const { cartLines, subtotal, content, clearCart, refreshCatalog } = useStore()
+  const { cartLines, subtotal, content, clearCart, refreshCatalog, zip: savedZip, setZip } = useStore()
   const [step, setStep] = useState<1 | 2>(1)
   const [form, setForm] = useState<Form>(EMPTY)
   const [shipping, setShipping] = useState<ShippingMethod | ''>('')
@@ -42,9 +43,13 @@ export default function CheckoutPage() {
 
   useEffect(() => { try { setForm({ ...EMPTY, ...JSON.parse(localStorage.getItem(FORM_KEY) ?? '{}') }) } catch {} }, [])
   useEffect(() => { try { const { notes, ...rest } = form; localStorage.setItem(FORM_KEY, JSON.stringify(rest)) } catch {} }, [form]) // eslint-disable-line @typescript-eslint/no-unused-vars
-  const shippingList = shippingOptions(content); const paymentList = paymentOptions(content)
-  useEffect(() => { if (!shipping && shippingList[0]) setShipping(shippingList[0].id); if (!payment && paymentList[0]) setPayment(paymentList[0].id) }, [content]) // eslint-disable-line react-hooks/exhaustive-deps
-  const totals = useMemo(() => computeTotals(content, subtotal, shipping, payment, coupon), [content, subtotal, shipping, payment, coupon])
+  // El CP que la clienta ya calculó en el producto o el carrito se usa acá; si lo cambia, se guarda.
+  useEffect(() => { if (savedZip) setForm(f => (f.zip ? f : { ...f, zip: savedZip })) }, [savedZip])
+  const zone = zoneForZip(form.zip)
+  const shippingList = shippingOptions(content, zone ? form.zip : ''); const paymentList = paymentOptions(content)
+  useEffect(() => { if (zone) setZip(form.zip.trim().toUpperCase()) }, [form.zip]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if ((!shipping || !shippingList.some(o => o.id === shipping)) && shippingList[0]) setShipping(shippingList[0].id); if (!payment && paymentList[0]) setPayment(paymentList[0].id) }, [content, form.zip]) // eslint-disable-line react-hooks/exhaustive-deps
+  const totals = useMemo(() => computeTotals(content, subtotal, shipping, payment, coupon, zone ? form.zip : ''), [content, subtotal, shipping, payment, coupon, form.zip, zone])
   const set = (key: keyof Form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm(f => ({ ...f, [key]: e.target.value }))
   const pickup = shipping === 'pickup'
 
@@ -61,6 +66,7 @@ export default function CheckoutPage() {
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError('Ingresá un email válido.')
     if (!form.firstName.trim() || !form.lastName.trim() || !form.phone.trim()) return setError('Completá nombre, apellido y teléfono.')
     if (!shipping) return setError('Elegí cómo querés recibir tu pedido.')
+    if (!pickup && !zone) return setError('Ingresá un código postal válido para calcular el envío.')
     if (!pickup && (!form.street.trim() || !form.number.trim() || !form.city.trim() || !form.province.trim() || !form.zip.trim())) return setError('Completá la dirección de entrega.')
     setStep(2); window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -74,11 +80,12 @@ export default function CheckoutPage() {
       const response = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
         customerName: name, customerPhone: form.phone, customerEmail: form.email, customerDni: form.dni, customerAddress: address,
         shippingMethod: shipping, paymentMethod: payment, couponCode: coupon?.code, notes: form.notes,
-        items: cartLines.map(line => ({ id: line.id, size: line.size, quantity: line.quantity })),
+        customerZip: pickup ? '' : form.zip,
+        items: cartLines.map(line => ({ id: line.id, color: line.color, size: line.size, quantity: line.quantity })),
       }) })
       const data = await response.json()
       if (!response.ok) { setError(data.error || 'No se pudo confirmar el pedido.'); refreshCatalog(); return }
-      const lines = data.items.map((i: { name: string; size: string; quantity: number; subtotal: number }) => `• ${i.name} · Talle ${i.size || 'Único'} · x${i.quantity} — ${money(i.subtotal)}`).join('\n')
+      const lines = data.items.map((i: { name: string; color?: string; size: string; quantity: number; subtotal: number }) => `• ${i.name}${i.color ? ` · ${i.color}` : ''} · Talle ${i.size || 'Único'} · x${i.quantity} — ${money(i.subtotal)}`).join('\n')
       const whatsappText = `${content.whatsapp_intro} #${data.id}:\n\n${lines}\n\nTotal: ${money(data.total)} (${PAYMENT_NAMES[data.paymentMethod] ?? ''})\nNombre: ${name}\n${address ? `Dirección: ${address}\n` : 'Retiro en persona\n'}Teléfono: ${form.phone}`
       setDone({ id: data.id, total: data.total, paymentMethod: data.paymentMethod, transferDetails: data.transferDetails, whatsappText })
       clearCart(); refreshCatalog(); window.scrollTo({ top: 0 })
@@ -92,7 +99,7 @@ export default function CheckoutPage() {
     const whatsapp = `https://wa.me/${content.whatsapp_number.replace(/\D/g, '')}?text=${encodeURIComponent(done.whatsappText)}`
     return <>{header}<section className="mx-auto max-w-xl px-4 py-12 text-center sm:px-6">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground"><Check size={30} /></div>
-      <h1 className="mt-6 text-3xl font-bold text-primary">¡Gracias por tu compra!</h1>
+      <h1 className="mt-6 font-display text-3xl font-semibold text-primary md:text-4xl">¡Gracias por tu compra!</h1>
       <p className="mt-2 text-muted-foreground">Tu pedido <b className="text-foreground">#{done.id}</b> quedó registrado. Te enviamos el detalle y nos vamos a contactar para coordinar.</p>
       <div className="mt-8 rounded-2xl border border-border bg-card p-6 text-left">
         <div className="flex justify-between text-sm"><span>Total</span><b>{money(done.total)}</b></div>
@@ -107,9 +114,9 @@ export default function CheckoutPage() {
   if (!cartLines.length) return <>{header}<section className="mx-auto max-w-md px-4 py-24 text-center"><ShoppingBag size={40} className="mx-auto text-muted-foreground" /><h1 className="mt-4 text-2xl font-bold">Tu carrito está vacío</h1><Link href="/productos" className="mt-6 inline-block rounded-full bg-primary px-7 py-3 text-sm font-bold text-primary-foreground">Ver productos</Link></section></>
 
   const summary = <div className="space-y-4">
-    <ul className="space-y-4">{cartLines.map(line => <li key={`${line.id}-${line.size}`} className="flex items-center gap-3">
-      <div className="relative"><img src={productImages(line.product)[0] || EMPTY_IMAGE} alt="" className="h-16 w-14 rounded-lg object-cover" /><span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">{line.quantity}</span></div>
-      <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{line.product.name}</p><p className="text-xs text-muted-foreground">Talle {line.size || 'Único'}</p></div>
+    <ul className="space-y-4">{cartLines.map(line => <li key={lineKey(line)} className="flex items-center gap-3">
+      <div className="relative"><img src={colorImage(line.product, line.color) || EMPTY_IMAGE} alt="" className="h-16 w-14 rounded-lg object-cover" /><span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">{line.quantity}</span></div>
+      <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{line.product.name}</p><p className="text-xs text-muted-foreground">{line.color && `${line.color} · `}Talle {line.size || 'Único'}</p></div>
       <span className="text-sm font-semibold">{money(line.product.price * line.quantity)}</span>
     </li>)}</ul>
     <div className="border-t border-border pt-4">{coupon ? <div className="flex items-center justify-between rounded-lg bg-secondary px-3 py-2 text-sm"><span className="flex items-center gap-2 font-semibold text-primary"><Tag size={14} />{coupon.code}</span><button onClick={() => { setCoupon(null); setCouponCode('') }} className="text-xs text-muted-foreground underline">Quitar</button></div>
@@ -133,14 +140,17 @@ export default function CheckoutPage() {
 
         {step === 1 ? <div className="space-y-9">
           <section><h2 className="mb-4 text-lg font-bold">Datos de contacto</h2><F label="Email" type="email" autoComplete="email" value={form.email} onChange={set('email')} placeholder="tu@email.com" /><p className="mt-1.5 text-xs text-muted-foreground">Te enviamos el detalle de la compra.</p></section>
-          <section><h2 className="mb-4 text-lg font-bold">Entrega</h2><div className="space-y-3">{shippingList.map(option => <Option key={option.id} checked={shipping === option.id} onSelect={() => setShipping(option.id)} title={option.label} right={option.cost === 0 || (totals.freeShipping && option.id !== 'pickup') ? 'Gratis' : money(option.cost)} />)}</div>
+          <section><h2 className="mb-4 text-lg font-bold">Entrega</h2>
+            <F label="Código postal" autoComplete="postal-code" inputMode="numeric" value={form.zip} onChange={set('zip')} placeholder="Ej.: 1414" className="mb-1 max-w-56" />
+            <p className="mb-4 text-xs text-muted-foreground">{zone ? `Envíos para ${ZONE_NAMES[zone]}.` : 'Ingresalo para ver las opciones y el costo del envío.'}</p>
+            <div className="space-y-3">{shippingList.map(option => <Option key={option.id} checked={shipping === option.id} onSelect={() => setShipping(option.id)} title={option.label} right={option.cost === null ? 'Ingresá tu CP' : option.cost === 0 || (totals.freeShipping && option.id !== 'pickup') ? 'Gratis' : money(option.cost)} />)}</div>
             {totals.freeFrom > 0 && !totals.freeShipping && <p className="mt-2 text-xs text-muted-foreground">Envío gratis comprando desde {money(totals.freeFrom)}.</p>}</section>
           <section><h2 className="mb-4 text-lg font-bold">{pickup ? 'Datos de quien retira' : 'Datos del destinatario'}</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <F label="Nombre" autoComplete="given-name" value={form.firstName} onChange={set('firstName')} /><F label="Apellido" autoComplete="family-name" value={form.lastName} onChange={set('lastName')} />
               <F label="Teléfono" type="tel" autoComplete="tel" value={form.phone} onChange={set('phone')} placeholder="11 2345 6789" /><F label="DNI (opcional)" inputMode="numeric" value={form.dni} onChange={set('dni')} />
               {!pickup && <><F label="Calle" autoComplete="address-line1" value={form.street} onChange={set('street')} className="sm:col-span-2" /><F label="Número" value={form.number} onChange={set('number')} /><F label="Piso / Depto (opcional)" value={form.floor} onChange={set('floor')} />
-                <F label="Ciudad / Barrio" autoComplete="address-level2" value={form.city} onChange={set('city')} /><F label="Provincia" autoComplete="address-level1" value={form.province} onChange={set('province')} /><F label="Código postal" autoComplete="postal-code" value={form.zip} onChange={set('zip')} /></>}
+                <F label="Ciudad / Barrio" autoComplete="address-level2" value={form.city} onChange={set('city')} /><F label="Provincia" autoComplete="address-level1" value={form.province} onChange={set('province')} /></>}
             </div>
           </section>
           {error && <p className="rounded-lg bg-primary/8 px-4 py-3 text-sm font-medium text-primary">{error}</p>}

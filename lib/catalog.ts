@@ -1,6 +1,7 @@
 import { sql, type SQL } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { ensureSchema } from '@/lib/db/ensure'
+import { cleanColors, totalStock as variantTotal } from '@/lib/stock'
 
 export function mapProduct(row: Record<string, unknown>) {
   const sizes = Array.isArray(row.sizes) ? row.sizes.map(String) : []
@@ -26,6 +27,7 @@ export function mapProduct(row: Record<string, unknown>) {
     active: row.active !== false,
     featured: row.featured === true,
     sku: row.sku == null ? '' : String(row.sku),
+    colors: cleanColors(row.colors),
     color: row.color == null ? '' : String(row.color),
     badge: row.badge == null ? '' : String(row.badge),
     description: row.description == null ? '' : String(row.description),
@@ -38,7 +40,7 @@ export async function fetchProducts(where?: SQL) {
     SELECT p.id, p.name, c.name AS category, p.price, p.old_price AS "oldPrice", p.color,
       p.image, p.images, p.badge, p.description, p.stock,
       p.low_stock_threshold AS "lowStockThreshold", p.sizes, p.size_stock AS "sizeStock",
-      p.active, p.featured, p.sku, p.created_at AS "createdAt"
+      p.active, p.featured, p.sku, p.colors, p.created_at AS "createdAt"
     FROM products p LEFT JOIN categories c ON c.id = p.category_id
     ${where ? sql`WHERE ${where}` : sql``}
     ORDER BY p.created_at DESC, p.id DESC
@@ -46,6 +48,4 @@ export async function fetchProducts(where?: SQL) {
   return result.rows.map(row => mapProduct(row as Record<string, unknown>))
 }
 
-export function totalStock(product: ReturnType<typeof mapProduct>) {
-  return product.sizes.length ? product.sizes.reduce((sum, size) => sum + (product.sizeStock[size] ?? 0), 0) : product.stock
-}
+export const totalStock = (product: ReturnType<typeof mapProduct>) => variantTotal(product)

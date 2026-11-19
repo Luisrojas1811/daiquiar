@@ -5,7 +5,7 @@ import { ensureSchema } from '@/lib/db/ensure'
 import { ORDER_STATUSES, ORDER_STATUS_IDS, type OrderStatus } from '@/lib/order-status'
 export { ORDER_STATUSES, ORDER_STATUS_IDS, type OrderStatus }
 
-export type OrderLine = { id: number; name: string; size: string; quantity: number; price: number; subtotal: number; image: string | null }
+export type OrderLine = { id: number; name: string; color?: string; size: string; quantity: number; price: number; subtotal: number; image: string | null }
 
 export function mapOrder(row: Record<string, unknown>) {
   // Los pedidos viejos guardaban { address, items } dentro de "items"; los nuevos además tienen columnas propias.
@@ -20,6 +20,7 @@ export function mapOrder(row: Record<string, unknown>) {
     customerPhone: String(row.customer_phone ?? ''),
     customerEmail: row.customer_email ? String(row.customer_email) : '',
     customerDni: row.customer_dni ? String(row.customer_dni) : '',
+    customerZip: row.customer_zip ? String(row.customer_zip) : '',
     emailSent: row.email_sent === true,
     customerAddress: String(row.customer_address ?? payload.address ?? ''),
     items,

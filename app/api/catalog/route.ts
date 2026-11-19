@@ -5,6 +5,7 @@ import { isAdminRequest } from '@/lib/auth'
 import { fetchProducts } from '@/lib/catalog'
 import { pgTextArray } from '@/lib/pg'
 import { ensureSchema } from '@/lib/db/ensure'
+import { cleanColors, variantKeys } from '@/lib/stock'
 
 // El stock cambia con cada compra: esta ruta nunca debe quedar cacheada.
 export const dynamic = 'force-dynamic'
@@ -31,8 +32,10 @@ export async function POST(request: Request) {
     const price = Number(body.price)
     const stock = Math.max(0, Math.floor(Number(body.stock) || 0))
     const sizes: string[] = Array.isArray(body.sizes) ? body.sizes.map(String).map((size: string) => size.trim()).filter(Boolean) : []
-    const sizeStock = sizes.length && body.sizeStock && typeof body.sizeStock === 'object' && !Array.isArray(body.sizeStock)
-      ? Object.fromEntries(sizes.map(size => [size, Math.max(0, Math.floor(Number(body.sizeStock[size]) || 0))]))
+    const colors = cleanColors(body.colors)
+    const keys = variantKeys({ sizes, colors })
+    const sizeStock = keys.length && body.sizeStock && typeof body.sizeStock === 'object' && !Array.isArray(body.sizeStock)
+      ? Object.fromEntries(keys.map(key => [key, Math.max(0, Math.floor(Number(body.sizeStock[key]) || 0))]))
       : {}
     const images: string[] = Array.isArray(body.images) ? body.images.map(String).filter(Boolean) : []
     const image = images[0] ?? (body.image ? String(body.image) : null)
@@ -46,10 +49,10 @@ export async function POST(request: Request) {
     `)
     const categoryId = categoryResult.rows[0]?.id
     const inserted = await db.execute(sql`
-      INSERT INTO products (name, category_id, price, old_price, color, image, images, badge, description, stock, low_stock_threshold, sizes, size_stock, active, featured, sku)
+      INSERT INTO products (name, category_id, price, old_price, color, image, images, badge, description, stock, low_stock_threshold, sizes, size_stock, colors, active, featured, sku)
       VALUES (${name}, ${categoryId}, ${price}, ${body.oldPrice != null && body.oldPrice !== '' ? Number(body.oldPrice) : null},
-        ${body.color ?? null}, ${image}, ${pgTextArray(images)}::text[], ${body.badge ?? null}, ${body.description ?? null}, ${sizes.length ? 0 : stock},
-        ${Math.max(1, Math.floor(Number(body.lowStockThreshold) || 3))}, ${pgTextArray(sizes)}::text[], ${JSON.stringify(sizeStock)}::jsonb,
+        ${body.color ?? null}, ${image}, ${pgTextArray(images)}::text[], ${body.badge ?? null}, ${body.description ?? null}, ${keys.length ? 0 : stock},
+        ${Math.max(1, Math.floor(Number(body.lowStockThreshold) || 3))}, ${pgTextArray(sizes)}::text[], ${JSON.stringify(sizeStock)}::jsonb, ${JSON.stringify(colors)}::jsonb,
         ${body.active !== false}, ${body.featured === true}, ${body.sku ? String(body.sku) : null})
       RETURNING id
     `)

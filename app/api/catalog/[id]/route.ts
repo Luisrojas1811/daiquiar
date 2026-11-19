@@ -5,6 +5,7 @@ import { isAdminRequest } from '@/lib/auth'
 import { fetchProducts } from '@/lib/catalog'
 import { pgTextArray } from '@/lib/pg'
 import { ensureSchema } from '@/lib/db/ensure'
+import { cleanColors, variantKeys } from '@/lib/stock'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,11 +46,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (body.sku !== undefined) set.push(sql`sku = ${body.sku ? String(body.sku) : null}`)
     if (body.lowStockThreshold !== undefined) set.push(sql`low_stock_threshold = ${Math.max(1, Math.floor(Number(body.lowStockThreshold) || 3))}`)
 
-    if (body.sizes !== undefined) {
+    if (body.sizes !== undefined || body.colors !== undefined) {
+      // Talles y colores se mandan juntos: definen las variantes ("Color / Talle") que llevan stock.
       const sizes: string[] = Array.isArray(body.sizes) ? body.sizes.map(String).map((size: string) => size.trim()).filter(Boolean) : []
+      const colors = cleanColors(body.colors)
+      const keys = variantKeys({ sizes, colors })
       set.push(sql`sizes = ${pgTextArray(sizes)}::text[]`)
-      if (sizes.length) {
-        set.push(sql`size_stock = ${JSON.stringify(toStockMap(body.sizeStock, sizes))}::jsonb`)
+      set.push(sql`colors = ${JSON.stringify(colors)}::jsonb`)
+      if (keys.length) {
+        set.push(sql`size_stock = ${JSON.stringify(toStockMap(body.sizeStock, keys))}::jsonb`)
         set.push(sql`stock = 0`)
       } else {
         set.push(sql`size_stock = '{}'::jsonb`)

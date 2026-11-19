@@ -1,5 +1,10 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import '@fontsource-variable/cinzel'
+import '@fontsource/lato/300.css'
+import '@fontsource/lato/400.css'
+import '@fontsource/lato/700.css'
+import '@fontsource/lato/400-italic.css'
 import './globals.css'
 
 export const metadata: Metadata = {

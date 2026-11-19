@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { isAdminRequest } from '@/lib/auth'
 import { fetchOrders } from '@/lib/orders'
 import { fetchProducts, totalStock } from '@/lib/catalog'
+import { isLowStock, variantKeys } from '@/lib/stock'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,11 +34,8 @@ export async function GET(request: Request) {
     sold.set(item.id, entry)
   }
 
-  const lowStock = products.filter(product => {
-    if (!product.active) return false
-    if (product.sizes.length) return product.sizes.some(size => (product.sizeStock[size] ?? 0) <= product.lowStockThreshold)
-    return product.stock <= product.lowStockThreshold
-  }).map(product => ({ id: product.id, name: product.name, image: product.image, total: totalStock(product), sizes: product.sizes.map(size => ({ size, stock: product.sizeStock[size] ?? 0 })), stock: product.stock, threshold: product.lowStockThreshold }))
+  const lowStock = products.filter(product => product.active && isLowStock(product))
+    .map(product => ({ id: product.id, name: product.name, image: product.image, total: totalStock(product), sizes: variantKeys(product).map(size => ({ size, stock: product.sizeStock[size] ?? 0 })), stock: product.stock, threshold: product.lowStockThreshold }))
 
   return NextResponse.json({
     monthRevenue: sum(month), prevMonthRevenue: sum(prevMonth), monthOrders: month.length, prevMonthOrders: prevMonth.length,

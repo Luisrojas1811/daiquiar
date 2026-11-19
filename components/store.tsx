@@ -8,26 +8,32 @@ import { ChevronRight, Menu, Minus, Plus, Search, ShoppingBag, Trash2, Truck, X 
 import { DEFAULT_CONTENT, type SiteContent } from '@/lib/content'
 import { computeTotals, money } from '@/lib/pricing'
 import type { Category, Product } from '@/lib/types'
+import { ShippingCalculator } from '@/components/shop/shipping-calculator'
+import { stockOf, totalStock } from '@/lib/stock'
 
 export type { Product }
-export type CartLine = { id: number; size: string; quantity: number }
+export type CartLine = { id: number; color: string; size: string; quantity: number }
 
 const fetcher = (url: string) => fetch(url, { cache: 'no-store' }).then(response => { if (!response.ok) throw new Error('No se pudo cargar'); return response.json() })
 export const slugify = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 export const EMPTY_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
-const CART_KEY = 'daiquiar_cart_v1'
+const CART_KEY = 'daiquiar_cart_v2'
+const ZIP_KEY = 'daiquiar_zip'
 
 export function productImages(product: Product) { return product.images?.length ? product.images : [product.image].filter(Boolean) }
-export function getSizeStock(product: Product, size: string) { return product.sizes.length ? Number(product.sizeStock?.[size] ?? 0) : product.stock }
-export function hasConfiguredSizeStock(product: Product) { return product.sizes.length > 0 && Object.keys(product.sizeStock ?? {}).length > 0 }
+export function getStock(product: Product, color: string, size: string) { return stockOf(product, color, size) }
 export function isLowQuantity(product: Product, quantity: number) { return quantity > 0 && quantity <= product.lowStockThreshold }
-export function availableUnits(product: Product) { return product.sizes.length ? product.sizes.reduce((s, size) => s + getSizeStock(product, size), 0) : product.stock }
+export function availableUnits(product: Product) { return totalStock(product) }
+export const lineKey = (line: Pick<CartLine, 'id' | 'color' | 'size'>) => `${line.id}|${line.color}|${line.size}`
+// Foto de la prenda en el color elegido (si la dueña le asignó una), si no la principal.
+export function colorImage(product: Product, color: string) { return product.colors?.find(c => c.name === color)?.image || productImages(product)[0] || '' }
 export const transferPercent = (content: SiteContent) => content.payment_transfer_enabled === '1' ? Number(content.payment_transfer_discount) || 0 : 0
 
 type Store = {
   products: Product[]; categories: Category[]; loading: boolean; content: SiteContent
   cart: CartLine[]; cartLines: (CartLine & { product: Product })[]; subtotal: number; count: number
-  add: (product: Product, size: string, quantity: number) => void; remove: (id: number, size: string) => void; changeQuantity: (id: number, size: string, delta: number) => void; clearCart: () => void
+  add: (product: Product, color: string, size: string, quantity: number) => void; remove: (line: CartLine) => void; changeQuantity: (line: CartLine, delta: number) => void; clearCart: () => void
+  zip: string; setZip: (zip: string) => void
   cartOpen: boolean; setCartOpen: (value: boolean) => void; refreshCatalog: () => void
   search: string; setSearch: (value: string) => void
 }
@@ -43,6 +49,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [loaded, setLoaded] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [zip, setZipState] = useState('')
+  const setZip = (value: string) => { setZipState(value); try { localStorage.setItem(ZIP_KEY, value) } catch {} }
+  useEffect(() => { try { setZipState(localStorage.getItem(ZIP_KEY) ?? '') } catch {} }, [])
 
   // El carrito se guarda en el navegador: si la clienta cierra la pestaña, lo encuentra igual al volver.
   useEffect(() => { try { const saved = JSON.parse(localStorage.getItem(CART_KEY) ?? '[]'); if (Array.isArray(saved)) setCart(saved) } catch {} setLoaded(true) }, [])
@@ -66,7 +75,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const next = current.flatMap(line => {
         const product = products.find(p => p.id === line.id)
         if (!product) { changed = true; return [] }
-        const available = getSizeStock(product, line.size)
+        const available = getStock(product, line.color, line.size)
         if (available <= 0) { changed = true; return [] }
         if (line.quantity > available) { changed = true; return [{ ...line, quantity: available }] }
         return [line]
@@ -75,25 +84,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     })
   }, [products])
 
-  const add = (product: Product, size: string, quantity: number) => {
-    const available = getSizeStock(product, size)
+  const add = (product: Product, color: string, size: string, quantity: number) => {
+    const available = getStock(product, color, size)
     if (available <= 0) return
+    const key = lineKey({ id: product.id, color, size })
     setCart(current => {
-      const existing = current.find(line => line.id === product.id && line.size === size)
+      const existing = current.find(line => lineKey(line) === key)
       if (existing) return current.map(line => line === existing ? { ...line, quantity: Math.min(available, existing.quantity + quantity) } : line)
-      return [...current, { id: product.id, size, quantity: Math.min(available, quantity) }]
+      return [...current, { id: product.id, color, size, quantity: Math.min(available, quantity) }]
     })
     setCartOpen(true) // como en Tiendanube: al agregar se abre el carrito lateral
   }
-  const remove = (id: number, size: string) => setCart(current => current.filter(line => !(line.id === id && line.size === size)))
-  const changeQuantity = (id: number, size: string, delta: number) => setCart(current => current.map(line => {
-    if (line.id !== id || line.size !== size) return line
-    const product = products.find(item => item.id === id)
-    const available = product ? getSizeStock(product, size) : line.quantity
+  const remove = (target: CartLine) => setCart(current => current.filter(line => lineKey(line) !== lineKey(target)))
+  const changeQuantity = (target: CartLine, delta: number) => setCart(current => current.map(line => {
+    if (lineKey(line) !== lineKey(target)) return line
+    const product = products.find(item => item.id === line.id)
+    const available = product ? getStock(product, line.color, line.size) : line.quantity
     return { ...line, quantity: Math.min(available, Math.max(1, line.quantity + delta)) }
   }))
 
-  return <StoreContext.Provider value={{ products, categories, loading: isLoading && !products.length, content, cart, cartLines, subtotal, count, add, remove, changeQuantity, clearCart: () => setCart([]), cartOpen, setCartOpen, refreshCatalog: () => refreshCatalog(), search, setSearch }}>{children}</StoreContext.Provider>
+  return <StoreContext.Provider value={{ products, categories, loading: isLoading && !products.length, content, cart, cartLines, subtotal, count, add, remove, changeQuantity, clearCart: () => setCart([]), cartOpen, setCartOpen, refreshCatalog: () => refreshCatalog(), search, setSearch, zip, setZip }}>{children}</StoreContext.Provider>
 }
 
 export function InstagramIcon({ size = 22 }: { size?: number }) {
@@ -114,7 +124,7 @@ function Marquee({ text }: { text: string }) {
   return <div className="overflow-hidden bg-primary text-primary-foreground" role="status" aria-label={clean}><div className="flex w-max animate-marquee items-center whitespace-nowrap py-2 text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ animationDuration: `${seconds}s` }}>{half(false)}{half(true)}</div></div>
 }
 
-export function Logo({ className = '' }: { className?: string }) { return <Link href="/" className={`font-black tracking-[0.18em] text-primary ${className}`}>DAIQUIAR</Link> }
+export function Logo({ className = '' }: { className?: string }) { return <Link href="/" className={`font-display font-bold tracking-[0.22em] text-primary ${className}`}>DAIQUIAR</Link> }
 
 function Header() {
   const { categories, count, setCartOpen, content, search, setSearch } = useStore()
@@ -161,7 +171,7 @@ function Footer() {
   const whatsappHref = `https://wa.me/${content.whatsapp_number.replace(/\D/g, '')}`
   return <footer className="mt-16 bg-primary text-primary-foreground">
     <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
-      <div className="md:col-span-1"><p className="text-2xl font-black tracking-[0.18em]">DAIQUIAR</p><p className="mt-4 text-sm leading-6 text-primary-foreground/75">{content.footer_text}</p>
+      <div className="md:col-span-1"><p className="font-display text-3xl font-bold tracking-[0.22em]">DAIQUIAR</p><p className="mt-4 text-sm leading-6 text-primary-foreground/75">{content.footer_text}</p>
         <div className="mt-5 flex gap-3"><a aria-label="Instagram" href={content.instagram_url} target="_blank" rel="noreferrer" className="rounded-full border border-primary-foreground/25 p-2.5 hover:bg-primary-foreground/10"><InstagramIcon size={18} /></a><a aria-label="WhatsApp" href={whatsappHref} target="_blank" rel="noreferrer" className="rounded-full border border-primary-foreground/25 p-2.5 hover:bg-primary-foreground/10"><WhatsAppIcon size={18} /></a></div>
       </div>
       <div><p className="text-xs font-bold uppercase tracking-[0.2em]">Tienda</p><ul className="mt-4 space-y-2.5 text-sm text-primary-foreground/75"><li><Link href="/productos" className="hover:text-primary-foreground">Ver todo</Link></li>{categories.map(c => <li key={c.id}><Link href={`/categoria/${c.slug}`} className="hover:text-primary-foreground">{c.name}</Link></li>)}</ul></div>
@@ -184,30 +194,31 @@ function CartDrawer() {
   return <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={content.cart_title}>
     <div className="absolute inset-0 bg-foreground/40 animate-in fade-in" onClick={() => setCartOpen(false)} />
     <aside className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-background shadow-2xl animate-in slide-in-from-right duration-300">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4"><h2 className="text-lg font-bold">{content.cart_title}</h2><button onClick={() => setCartOpen(false)} aria-label="Cerrar carrito" className="rounded-full p-1.5 hover:bg-secondary"><X size={22} /></button></div>
+      <div className="flex items-center justify-between border-b border-border px-5 py-4"><h2 className="font-display text-xl font-semibold">{content.cart_title}</h2><button onClick={() => setCartOpen(false)} aria-label="Cerrar carrito" className="rounded-full p-1.5 hover:bg-secondary"><X size={22} /></button></div>
       {cartLines.length === 0 ? <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center"><ShoppingBag size={36} className="text-muted-foreground" /><p className="text-muted-foreground">{content.cart_empty_text}</p><button onClick={() => { setCartOpen(false); router.push('/productos') }} className="rounded-full border border-primary px-6 py-2.5 text-sm font-semibold text-primary">Ver productos</button></div> : <>
         {totals.freeFrom > 0 && <div className="border-b border-border bg-secondary/60 px-5 py-3 text-xs">
           <p className="flex items-center gap-2 font-medium"><Truck size={15} className="text-primary" />{missing > 0 ? <>Te faltan <b>{money(missing)}</b> para tener envío gratis</> : <b className="text-primary">¡Tenés envío gratis!</b>}</p>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-accent"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, (subtotal / totals.freeFrom) * 100)}%` }} /></div>
         </div>}
         <ul className="flex-1 divide-y divide-border overflow-y-auto px-5">{cartLines.map(line => {
-          const available = getSizeStock(line.product, line.size)
-          return <li className="flex gap-4 py-4" key={`${line.id}-${line.size}`}>
-            <Link href={`/producto/${line.id}`} onClick={() => setCartOpen(false)}><img src={productImages(line.product)[0] || EMPTY_IMAGE} alt="" className="h-24 w-20 rounded-lg object-cover" /></Link>
+          const available = getStock(line.product, line.color, line.size)
+          return <li className="flex gap-4 py-4" key={lineKey(line)}>
+            <Link href={`/producto/${line.id}`} onClick={() => setCartOpen(false)}><img src={colorImage(line.product, line.color) || EMPTY_IMAGE} alt="" className="h-24 w-20 rounded-lg object-cover" /></Link>
             <div className="flex min-w-0 flex-1 flex-col">
-              <div className="flex justify-between gap-2"><p className="text-sm font-semibold leading-snug">{line.product.name}</p><button onClick={() => remove(line.id, line.size)} aria-label="Quitar del carrito" className="h-fit text-muted-foreground hover:text-primary"><Trash2 size={16} /></button></div>
-              <p className="text-xs text-muted-foreground">Talle: {line.size || 'Único'}</p>
+              <div className="flex justify-between gap-2"><p className="text-sm font-semibold leading-snug">{line.product.name}</p><button onClick={() => remove(line)} aria-label="Quitar del carrito" className="h-fit text-muted-foreground hover:text-primary"><Trash2 size={16} /></button></div>
+              <p className="text-xs text-muted-foreground">{line.color && <>Color: {line.color} · </>}Talle: {line.size || 'Único'}</p>
               <div className="mt-auto flex items-center justify-between pt-2">
-                <div className="flex items-center rounded-full border border-border"><button onClick={() => changeQuantity(line.id, line.size, -1)} className="p-1.5" aria-label="Restar"><Minus size={14} /></button><span className="min-w-6 text-center text-sm">{line.quantity}</span><button onClick={() => changeQuantity(line.id, line.size, 1)} disabled={line.quantity >= available} className="p-1.5 disabled:opacity-30" aria-label="Sumar"><Plus size={14} /></button></div>
+                <div className="flex items-center rounded-full border border-border"><button onClick={() => changeQuantity(line, -1)} className="p-1.5" aria-label="Restar"><Minus size={14} /></button><span className="min-w-6 text-center text-sm">{line.quantity}</span><button onClick={() => changeQuantity(line, 1)} disabled={line.quantity >= available} className="p-1.5 disabled:opacity-30" aria-label="Sumar"><Plus size={14} /></button></div>
                 <span className="text-sm font-semibold">{money(line.product.price * line.quantity)}</span>
               </div>
             </div>
           </li>
         })}</ul>
         <div className="border-t border-border px-5 py-4">
+          <div className="mb-4"><ShippingCalculator subtotal={subtotal} compact /></div>
           <div className="flex justify-between text-sm"><span>Subtotal (sin envío)</span><span className="font-semibold">{money(subtotal)}</span></div>
           {transfer > 0 && <p className="mt-1 text-right text-xs text-primary">{money(subtotal * (1 - transfer / 100))} con transferencia</p>}
-          <p className="mt-1 text-xs text-muted-foreground">El envío y los descuentos se calculan en el siguiente paso.</p>
+          <p className="mt-1 text-xs text-muted-foreground">El envío y el cupón se aplican en el siguiente paso.</p>
           <button onClick={() => { setCartOpen(false); router.push('/checkout') }} className="mt-4 w-full rounded-full bg-primary py-3.5 text-sm font-bold uppercase tracking-wider text-primary-foreground hover:brightness-110">Iniciar compra</button>
           <button onClick={() => setCartOpen(false)} className="mt-2 w-full py-2 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline">Ver más productos</button>
         </div>

@@ -10,7 +10,7 @@ export async function sendOrderEmail(order: AdminOrder, to: string, storeName = 
 
   const esc = (value: string) => value.replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]!))
   const rows = order.items.map(item => `<tr>
-      <td style="padding:10px 0;border-bottom:1px solid #E8D9C6">${esc(item.name)}<br><span style="color:#7A5A58;font-size:13px">Talle ${esc(item.size || 'Único')} · ${item.quantity} u. × ${money(item.price)}</span></td>
+      <td style="padding:10px 0;border-bottom:1px solid #E8D9C6">${esc(item.name)}<br><span style="color:#7A5A58;font-size:13px">${item.color ? `${esc(item.color)} · ` : ''}Talle ${esc(item.size || 'Único')} · ${item.quantity} u. × ${money(item.price)}</span></td>
       <td style="padding:10px 0;border-bottom:1px solid #E8D9C6;text-align:right;white-space:nowrap">${money(item.subtotal)}</td></tr>`).join('')
   const line = (label: string, value: string, bold = false) => `<tr><td style="padding:4px 0;color:#7A5A58">${label}</td><td style="padding:4px 0;text-align:right;${bold ? 'font-weight:700;font-size:18px;color:#80011F' : ''}">${value}</td></tr>`
   const info = (label: string, value: string) => value ? `<p style="margin:0 0 6px"><b>${label}:</b> ${esc(value)}</p>` : ''
@@ -23,7 +23,7 @@ export async function sendOrderEmail(order: AdminOrder, to: string, storeName = 
     <div style="padding:24px">
       <h3 style="margin:0 0 10px">Clienta</h3>
       ${info('Nombre', order.customerName)}${info('Teléfono', order.customerPhone)}${info('Email', order.customerEmail)}${info('DNI', order.customerDni)}
-      ${info('Entrega', SHIPPING_NAMES[order.shippingMethod] ?? order.shippingMethod)}${info('Dirección', order.customerAddress)}
+      ${info('Entrega', SHIPPING_NAMES[order.shippingMethod] ?? order.shippingMethod)}${info('Dirección', order.customerAddress)}${info('Código postal', order.customerZip)}
       ${info('Pago', PAYMENT_NAMES[order.paymentMethod] ?? order.paymentMethod)}${info('Cupón', order.couponCode)}${info('Notas', order.notes)}
       <h3 style="margin:22px 0 4px">Productos</h3>
       <table style="width:100%;border-collapse:collapse;font-size:14px">${rows}</table>

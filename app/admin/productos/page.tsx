@@ -7,11 +7,12 @@ import { Eye, EyeOff, LayoutGrid, List, Plus, Search, Shirt, Star } from 'lucide
 import { Badge, ButtonLink, Card, EmptyState, Input, PageHeader, Select, Skeleton, Tabs, fetcher, money, send } from '@/components/admin/ui'
 import { productTotalStock, type Product } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { isLowStock } from '@/lib/stock'
 
 function stockBadge(product: Product) {
   const total = productTotalStock(product)
   if (total === 0) return <Badge tone="red">Sin stock</Badge>
-  const low = product.sizes.length ? product.sizes.some(size => (product.sizeStock[size] ?? 0) <= product.lowStockThreshold) : total <= product.lowStockThreshold
+  const low = isLowStock(product)
   return low ? <Badge tone="amber">{total} u. · stock bajo</Badge> : <Badge tone="green">{total} u.</Badge>
 }
 
@@ -50,6 +51,7 @@ export default function ProductsPage() {
         <div className="p-3.5">
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{product.category || 'Sin categoría'}</p>
           <Link href={`/admin/productos/${product.id}`} className="mt-0.5 block truncate text-sm font-medium hover:text-primary">{product.name}</Link>
+          {product.colors?.length > 0 && <div className="mt-1.5 flex gap-1">{product.colors.map(c => <span key={c.name} title={c.name} className="h-3 w-3 rounded-full border border-black/10" style={{ background: c.hex }} />)}</div>}
           <p className="mt-1 text-sm tabular-nums">{money(product.price)} {product.oldPrice ? <del className="text-xs text-muted-foreground">{money(product.oldPrice)}</del> : null}</p>
           <div className="mt-2.5 flex items-center justify-between gap-2">{stockBadge(product)}
             <div className="flex">

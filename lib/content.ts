@@ -115,12 +115,17 @@ export const CONTENT_FIELDS: ContentField[] = [
 
   // Envíos
   { key: 'shipping_free_from', group: G[10], type: 'number', label: 'Envío gratis desde ($)', default: '100000', hint: 'Si el subtotal llega a este monto, el envío es gratis. Poné 0 para desactivarlo.' },
-  { key: 'shipping_caba_enabled', group: G[10], type: 'toggle', label: 'Ofrecer envío en CABA / GBA', default: '1' },
-  { key: 'shipping_caba_label', group: G[10], type: 'text', label: 'Envío CABA · nombre', default: 'Moto en CABA y GBA' },
-  { key: 'shipping_caba_cost', group: G[10], type: 'number', label: 'Envío CABA · costo ($)', default: '5000' },
-  { key: 'shipping_country_enabled', group: G[10], type: 'toggle', label: 'Ofrecer envío a todo el país', default: '1' },
-  { key: 'shipping_country_label', group: G[10], type: 'text', label: 'Envío al país · nombre', default: 'Correo Argentino a todo el país' },
-  { key: 'shipping_country_cost', group: G[10], type: 'number', label: 'Envío al país · costo ($)', default: '9000' },
+  { key: 'shipping_caba_enabled', group: G[10], type: 'toggle', label: 'Ofrecer envío en moto (solo CABA y GBA)', default: '1', hint: 'Se ofrece solo si el código postal es de CABA o GBA.' },
+  { key: 'shipping_caba_label', group: G[10], type: 'text', label: 'Moto · nombre', default: 'Moto · llega en 24/48 h' },
+  { key: 'shipping_moto_caba_cost', group: G[10], type: 'number', label: 'Moto · costo en CABA ($)', default: '4500' },
+  { key: 'shipping_moto_amba_cost', group: G[10], type: 'number', label: 'Moto · costo en GBA ($)', default: '6500' },
+  { key: 'shipping_country_enabled', group: G[10], type: 'toggle', label: 'Ofrecer Correo Argentino', default: '1' },
+  { key: 'shipping_country_label', group: G[10], type: 'text', label: 'Correo · nombre', default: 'Correo Argentino a domicilio' },
+  { key: 'shipping_zone_caba', group: G[10], type: 'number', label: 'Correo · CABA ($)', default: '6000', hint: 'Códigos postales 1000 a 1499.' },
+  { key: 'shipping_zone_amba', group: G[10], type: 'number', label: 'Correo · GBA ($)', default: '7000', hint: 'Códigos postales 1500 a 1999.' },
+  { key: 'shipping_zone_centro', group: G[10], type: 'number', label: 'Correo · Centro ($)', default: '8500', hint: 'Interior de Buenos Aires, Córdoba, Santa Fe, Entre Ríos y La Pampa.' },
+  { key: 'shipping_zone_norte', group: G[10], type: 'number', label: 'Correo · Norte, Litoral y Cuyo ($)', default: '10500', hint: 'NOA, NEA, Mendoza, San Juan, San Luis y La Rioja.' },
+  { key: 'shipping_zone_patagonia', group: G[10], type: 'number', label: 'Correo · Patagonia ($)', default: '12500', hint: 'Neuquén, Río Negro, Chubut, Santa Cruz y Tierra del Fuego.' },
   { key: 'shipping_pickup_enabled', group: G[10], type: 'toggle', label: 'Ofrecer retiro en persona', default: '1' },
   { key: 'shipping_pickup_label', group: G[10], type: 'text', label: 'Retiro · nombre', default: 'Retiro en showroom (CABA) · sin cargo' },
 

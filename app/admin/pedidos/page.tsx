@@ -14,7 +14,7 @@ const statusLabel = (id: string) => ORDER_STATUSES.find(status => status.id === 
 
 function exportCsv(orders: AdminOrder[]) {
   const header = ['Pedido', 'Fecha', 'Estado', 'Clienta', 'Teléfono', 'Email', 'Dirección', 'Entrega', 'Pago', 'Productos', 'Subtotal', 'Descuento', 'Envío', 'Total']
-  const rows = orders.map(o => [o.id, new Date(o.createdAt).toLocaleString('es-AR'), statusLabel(o.status), o.customerName, o.customerPhone, o.customerEmail, o.customerAddress, SHIPPING_NAMES[o.shippingMethod] ?? '', PAYMENT_NAMES[o.paymentMethod] ?? '', o.items.map(i => `${i.quantity}x ${i.name} (${i.size || 'Único'})`).join(' | '), o.subtotal, o.discount, o.shippingCost, o.total])
+  const rows = orders.map(o => [o.id, new Date(o.createdAt).toLocaleString('es-AR'), statusLabel(o.status), o.customerName, o.customerPhone, o.customerEmail, o.customerAddress, SHIPPING_NAMES[o.shippingMethod] ?? '', PAYMENT_NAMES[o.paymentMethod] ?? '', o.items.map(i => `${i.quantity}x ${i.name} (${i.color ? `${i.color} ` : ''}${i.size || 'Único'})`).join(' | '), o.subtotal, o.discount, o.shippingCost, o.total])
   const csv = [header, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(';')).join('\n')
   const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }))
   const link = document.createElement('a'); link.href = url; link.download = `pedidos-daiquiar-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(url)

@@ -6,7 +6,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, ImagePlus, Loader2, Star, Trash2, X } from 'lucide-react'
 import { Badge, Button, Card, Field, Input, PageHeader, Select, SaveBar, Textarea, Toggle, fetcher, money, send } from '@/components/admin/ui'
 import { uploadImages } from '@/components/admin/upload'
-import type { Category, Product } from '@/lib/types'
+import type { Category, ColorOption, Product } from '@/lib/types'
+import { variantKey, variantKeys } from '@/lib/stock'
 import { cn } from '@/lib/utils'
 
 const SIZE_PRESETS = [
@@ -16,10 +17,10 @@ const SIZE_PRESETS = [
   { label: 'Talle único', sizes: [] as string[] },
 ]
 
-type Draft = { name: string; description: string; category: string; price: string; oldPrice: string; badge: string; color: string; sku: string; images: string[]; sizes: string[]; sizeStock: Record<string, number>; stock: string; lowStockThreshold: string; active: boolean; featured: boolean }
+type Draft = { name: string; description: string; category: string; price: string; oldPrice: string; badge: string; color: string; sku: string; images: string[]; sizes: string[]; colors: ColorOption[]; sizeStock: Record<string, number>; stock: string; lowStockThreshold: string; active: boolean; featured: boolean }
 const toDraft = (p?: Product): Draft => ({
   name: p?.name ?? '', description: p?.description ?? '', category: p?.category ?? '', price: p ? String(p.price) : '', oldPrice: p?.oldPrice ? String(p.oldPrice) : '',
-  badge: p?.badge ?? '', color: p?.color ?? '', sku: p?.sku ?? '', images: p?.images?.length ? p.images : p?.image ? [p.image] : [], sizes: p?.sizes ?? ['S', 'M', 'L'],
+  badge: p?.badge ?? '', color: p?.color ?? '', sku: p?.sku ?? '', images: p?.images?.length ? p.images : p?.image ? [p.image] : [], sizes: p?.sizes ?? ['S', 'M', 'L'], colors: p?.colors ?? [],
   sizeStock: p?.sizeStock ?? {}, stock: String(p?.stock ?? 0), lowStockThreshold: String(p?.lowStockThreshold ?? 3), active: p?.active ?? true, featured: p?.featured ?? false,
 })
 
@@ -38,7 +39,23 @@ export function ProductEditor({ product }: { product?: Product }) {
   useEffect(() => { if (!draft.category && categories?.length) setDraft(d => ({ ...d, category: categories[0].name })) }, [categories]) // eslint-disable-line react-hooks/exhaustive-deps
   const dirty = JSON.stringify(draft) !== JSON.stringify(initial.current)
   const discount = Number(draft.oldPrice) > Number(draft.price) && Number(draft.price) > 0 ? Math.round((1 - Number(draft.price) / Number(draft.oldPrice)) * 100) : 0
-  const totalStock = useMemo(() => draft.sizes.length ? draft.sizes.reduce((s, size) => s + (draft.sizeStock[size] ?? 0), 0) : Number(draft.stock) || 0, [draft])
+  const keys = useMemo(() => variantKeys(draft), [draft.sizes, draft.colors]) // eslint-disable-line react-hooks/exhaustive-deps
+  const totalStock = useMemo(() => keys.length ? keys.reduce((s, key) => s + (draft.sizeStock[key] ?? 0), 0) : Number(draft.stock) || 0, [draft, keys])
+  const [newColor, setNewColor] = useState({ name: '', hex: '#80011F' })
+  const addColor = (name: string, hex: string) => { const clean = name.trim(); if (!clean || draft.colors.some(c => c.name.toLowerCase() === clean.toLowerCase())) return; set('colors', [...draft.colors, { name: clean, hex }]); setNewColor({ name: '', hex: '#80011F' }) }
+  const updateColor = (index: number, patch: Partial<ColorOption>) => {
+    const old = draft.colors[index]; const next = draft.colors.map((c, i) => i === index ? { ...c, ...patch } : c)
+    // Si cambia el nombre, el stock se mueve a la nueva clave.
+    if (patch.name !== undefined && patch.name !== old.name) {
+      const moved = Object.fromEntries(Object.entries(draft.sizeStock).map(([key, qty]) => [key === old.name ? patch.name! : key.startsWith(`${old.name} / `) ? `${patch.name} / ${key.slice(old.name.length + 3)}` : key, qty]))
+      setDraft(d => ({ ...d, colors: next, sizeStock: moved }))
+    } else set('colors', next)
+  }
+  const stockInput = (key: string) => { const qty = draft.sizeStock[key] ?? 0; return <div className={cn('flex items-center rounded-lg border bg-card', qty === 0 ? 'border-red-200 bg-red-50/60' : qty <= Number(draft.lowStockThreshold) ? 'border-amber-200 bg-amber-50/60' : 'border-input')}>
+    <button type="button" onClick={() => set('sizeStock', { ...draft.sizeStock, [key]: Math.max(0, qty - 1) })} className="px-2 py-1.5 text-muted-foreground" aria-label="Restar">−</button>
+    <input type="number" min="0" value={qty} aria-label={`Stock ${key}`} onChange={e => set('sizeStock', { ...draft.sizeStock, [key]: Math.max(0, Number(e.target.value) || 0) })} className="w-full min-w-0 bg-transparent text-center text-sm tabular-nums outline-none" />
+    <button type="button" onClick={() => set('sizeStock', { ...draft.sizeStock, [key]: qty + 1 })} className="px-2 py-1.5 text-muted-foreground" aria-label="Sumar">+</button>
+  </div> }
 
   async function addPhotos(files: FileList | null) {
     if (!files?.length) return
@@ -57,8 +74,8 @@ export function ProductEditor({ product }: { product?: Product }) {
     try {
       const body: Record<string, unknown> = { name: draft.name.trim(), description: draft.description, category: draft.category, price: Number(draft.price), oldPrice: draft.oldPrice ? Number(draft.oldPrice) : null, badge: draft.badge, color: draft.color, sku: draft.sku, images: draft.images, lowStockThreshold: Number(draft.lowStockThreshold) || 1, active: draft.active, featured: draft.featured }
       // El stock solo se manda si se tocó: así una venta que entró mientras editabas no se pisa.
-      const stockTouched = !product || JSON.stringify([draft.sizes, draft.sizeStock, draft.stock]) !== JSON.stringify([initial.current.sizes, initial.current.sizeStock, initial.current.stock])
-      if (stockTouched) Object.assign(body, { sizes: draft.sizes, sizeStock: Object.fromEntries(draft.sizes.map(s => [s, draft.sizeStock[s] ?? 0])), stock: draft.sizes.length ? 0 : Number(draft.stock) || 0 })
+      const stockTouched = !product || JSON.stringify([draft.sizes, draft.colors, draft.sizeStock, draft.stock]) !== JSON.stringify([initial.current.sizes, initial.current.colors, initial.current.sizeStock, initial.current.stock])
+      if (stockTouched) Object.assign(body, { sizes: draft.sizes, colors: draft.colors, sizeStock: Object.fromEntries(keys.map(k => [k, draft.sizeStock[k] ?? 0])), stock: keys.length ? 0 : Number(draft.stock) || 0 })
       const saved = await send<Product>(product ? `/api/catalog/${product.id}` : '/api/catalog', product ? 'PATCH' : 'POST', body)
       if (!product) { router.replace(`/admin/productos/${saved.id}?creado=1`); return }
       initial.current = toDraft(saved); setDraft(toDraft(saved)); setMessage('Producto guardado. Ya se ve en la tienda.')
@@ -111,22 +128,29 @@ export function ProductEditor({ product }: { product?: Product }) {
           </div>
         </Card>
 
+        <Card title="Colores" description="Opcional. Cada color puede tener su propia foto y su stock por talle.">
+          {draft.colors.length > 0 && <ul className="mb-4 space-y-2">{draft.colors.map((c, index) => <li key={index} className="flex flex-wrap items-center gap-2 rounded-xl border border-border p-2">
+            <input type="color" value={c.hex} onChange={e => updateColor(index, { hex: e.target.value })} aria-label={`Muestra de ${c.name}`} className="h-9 w-9 cursor-pointer rounded-lg border border-border bg-transparent p-0.5" />
+            <Input value={c.name} onChange={e => updateColor(index, { name: e.target.value })} className="h-9 w-36" aria-label="Nombre del color" />
+            <div className="flex items-center gap-1.5"><span className="text-xs text-muted-foreground">Foto:</span>
+              {draft.images.map((url, i) => <button type="button" key={url} onClick={() => updateColor(index, { image: c.image === url ? undefined : url })} className={cn('h-9 w-7 overflow-hidden rounded-md border-2', c.image === url ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100')} aria-label={`Usar foto ${i + 1} para ${c.name}`}><img src={url} alt="" className="h-full w-full object-cover" /></button>)}
+            </div>
+            <button type="button" onClick={() => set('colors', draft.colors.filter((_, i) => i !== index))} className="ml-auto rounded-md p-1.5 text-muted-foreground hover:text-destructive" aria-label={`Quitar ${c.name}`}><X size={15} /></button>
+          </li>)}</ul>}
+          <div className="flex flex-wrap gap-2">{[['Negro', '#151112'], ['Blanco', '#FFFFFF'], ['Bordó', '#80011F'], ['Nude', '#E3BFA5'], ['Rojo', '#C1121F'], ['Beige', '#E8D9C6'], ['Rosa', '#F2B8C6'], ['Chocolate', '#4A2420']].filter(([n]) => !draft.colors.some(c => c.name === n)).map(([name, hex]) => <button type="button" key={name} onClick={() => addColor(name, hex)} className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted"><span className="h-3 w-3 rounded-full border border-black/10" style={{ background: hex }} />+ {name}</button>)}</div>
+          <div className="mt-3 flex max-w-sm gap-2"><input type="color" value={newColor.hex} onChange={e => setNewColor({ ...newColor, hex: e.target.value })} aria-label="Color nuevo" className="h-10 w-10 shrink-0 cursor-pointer rounded-lg border border-border p-0.5" /><Input value={newColor.name} onChange={e => setNewColor({ ...newColor, name: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addColor(newColor.name, newColor.hex) } }} placeholder="Otro color (ej.: Verde oliva)" /><Button type="button" onClick={() => addColor(newColor.name, newColor.hex)}>Agregar</Button></div>
+        </Card>
+
         <Card title="Talles y stock" description={`${totalStock} unidades en total. El stock baja solo con cada compra.`}>
           <div className="mb-4 flex flex-wrap gap-2">{SIZE_PRESETS.map(preset => <button key={preset.label} type="button" onClick={() => set('sizes', preset.sizes)} className={cn('rounded-full border px-3 py-1 text-xs font-medium transition', JSON.stringify(preset.sizes) === JSON.stringify(draft.sizes) ? 'border-primary bg-primary/8 text-primary' : 'border-border hover:bg-muted')}>{preset.label}</button>)}</div>
-          {draft.sizes.length ? <>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{draft.sizes.map(size => {
-              const qty = draft.sizeStock[size] ?? 0
-              return <div key={size} className={cn('rounded-xl border p-3', qty === 0 ? 'border-red-200 bg-red-50/50' : qty <= Number(draft.lowStockThreshold) ? 'border-amber-200 bg-amber-50/50' : 'border-border')}>
-                <div className="mb-2 flex items-center justify-between"><span className="text-sm font-semibold">{size}</span><button type="button" onClick={() => set('sizes', draft.sizes.filter(s => s !== size))} className="text-muted-foreground hover:text-destructive" aria-label={`Quitar talle ${size}`}><X size={14} /></button></div>
-                <div className="flex items-center rounded-lg border border-input bg-card">
-                  <button type="button" onClick={() => set('sizeStock', { ...draft.sizeStock, [size]: Math.max(0, qty - 1) })} className="px-2.5 py-1.5 text-muted-foreground">−</button>
-                  <input type="number" min="0" value={qty} onChange={e => set('sizeStock', { ...draft.sizeStock, [size]: Math.max(0, Number(e.target.value) || 0) })} className="w-full min-w-0 bg-transparent text-center text-sm tabular-nums outline-none" />
-                  <button type="button" onClick={() => set('sizeStock', { ...draft.sizeStock, [size]: qty + 1 })} className="px-2.5 py-1.5 text-muted-foreground">+</button>
-                </div>
-              </div>
-            })}</div>
-            <div className="mt-3 flex max-w-xs gap-2"><Input value={newSize} onChange={e => setNewSize(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSize() } }} placeholder="Agregar talle (ej.: XL)" /><Button type="button" onClick={addSize}>Agregar</Button></div>
-          </> : <Field label="Stock (talle único)" className="max-w-48"><Input type="number" min="0" value={draft.stock} onChange={e => set('stock', e.target.value)} /></Field>}
+          {draft.sizes.length > 0 && <div className="mb-4 flex flex-wrap items-center gap-1.5">{draft.sizes.map(size => <span key={size} className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold">{size}<button type="button" onClick={() => set('sizes', draft.sizes.filter(s => s !== size))} aria-label={`Quitar talle ${size}`} className="text-muted-foreground hover:text-destructive"><X size={12} /></button></span>)}
+            <div className="flex gap-1.5"><Input value={newSize} onChange={e => setNewSize(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSize() } }} placeholder="+ talle" className="h-7 w-20 text-xs" /></div></div>}
+          {keys.length === 0 ? <Field label="Stock (talle único)" className="max-w-48"><Input type="number" min="0" value={draft.stock} onChange={e => set('stock', e.target.value)} /></Field>
+            : <div className="overflow-x-auto"><table className="text-sm"><thead><tr><th className="pr-3 pb-2 text-left text-xs font-medium text-muted-foreground">{draft.colors.length ? 'Color' : ''}</th>{(draft.sizes.length ? draft.sizes : ['Stock']).map(size => <th key={size} className="px-1 pb-2 text-xs font-semibold">{size}</th>)}</tr></thead>
+              <tbody>{(draft.colors.length ? draft.colors.map(c => c.name) : ['']).map(color => <tr key={color}>
+                <td className="py-1 pr-3 whitespace-nowrap">{color && <span className="flex items-center gap-2 text-sm font-medium"><span className="h-3.5 w-3.5 rounded-full border border-black/10" style={{ background: draft.colors.find(c => c.name === color)?.hex }} />{color}</span>}</td>
+                {(draft.sizes.length ? draft.sizes : ['']).map(size => <td key={size} className="w-24 px-1 py-1">{stockInput(variantKey(color, size))}</td>)}
+              </tr>)}</tbody></table></div>}
         </Card>
       </div>
 
@@ -141,7 +165,6 @@ export function ProductEditor({ product }: { product?: Product }) {
           <div className="space-y-4">
             <Field label="Categoría"><Select value={draft.category} onChange={e => set('category', e.target.value)}>{categories?.map(c => <option key={c.id}>{c.name}</option>)}{draft.category && !categories?.some(c => c.name === draft.category) && <option>{draft.category}</option>}</Select></Field>
             <Field label="Etiqueta" hint="Ej.: NUEVO, 30% OFF, ÚLTIMOS"><Input value={draft.badge} onChange={e => set('badge', e.target.value)} /></Field>
-            <Field label="Color"><Input value={draft.color} onChange={e => set('color', e.target.value)} placeholder="Ej.: Negro" /></Field>
             <Field label="Código interno (SKU)" hint="Opcional, solo lo ves vos."><Input value={draft.sku} onChange={e => set('sku', e.target.value)} /></Field>
           </div>
         </Card>

@@ -39,7 +39,7 @@ export default function OrderDetail() {
   const currentIndex = FLOW.findIndex(step => step.id === order.status)
   const next = order.status !== 'cancelled' ? FLOW[currentIndex + 1] : undefined
   const statusLabel = ORDER_STATUSES.find(status => status.id === order.status)?.label
-  const summary = `Pedido #${order.id}\n${order.items.map(i => `${i.quantity}x ${i.name} (Talle ${i.size || 'Único'})`).join('\n')}\nTotal: ${money(order.total)}\n${order.customerName} · ${order.customerPhone}\n${order.customerAddress}`
+  const summary = `Pedido #${order.id}\n${order.items.map(i => `${i.quantity}x ${i.name} (${i.color ? `${i.color}, ` : ''}Talle ${i.size || 'Único'})`).join('\n')}\nTotal: ${money(order.total)}\n${order.customerName} · ${order.customerPhone}\n${order.customerAddress}`
 
   return <>
     <PageHeader back={{ href: '/admin/pedidos', label: 'Pedidos' }} title={`Pedido #${order.id}`} description={`${dateTime(order.createdAt)} · ${order.emailSent ? 'Aviso por email enviado' : 'Sin aviso por email'}`}
@@ -71,7 +71,7 @@ export default function OrderDetail() {
         <Card title="Productos" padded={false}>
           <ul className="divide-y divide-border">{order.items.map((item, index) => <li key={index} className="flex items-center gap-4 px-5 py-3.5">
             {item.image ? <img src={item.image} alt="" className="h-14 w-12 rounded-lg object-cover" /> : <div className="h-14 w-12 rounded-lg bg-muted" />}
-            <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{item.name}</p><p className="text-xs text-muted-foreground">Talle {item.size || 'Único'} · {item.quantity} × {money(item.price)}</p></div>
+            <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{item.name}</p><p className="text-xs text-muted-foreground">{item.color && <>{item.color} · </>}Talle {item.size || 'Único'} · {item.quantity} × {money(item.price)}</p></div>
             <span className="text-sm font-medium tabular-nums">{money(item.subtotal)}</span>
           </li>)}</ul>
           <dl className="space-y-1.5 border-t border-border px-5 py-4 text-sm">
@@ -99,6 +99,7 @@ export default function OrderDetail() {
         <Card title="Entrega y pago">
           <div className="space-y-3 text-sm">
             <div><p className="text-xs text-muted-foreground">Entrega</p><p className="font-medium">{SHIPPING_NAMES[order.shippingMethod] ?? 'A coordinar'}</p></div>
+            {order.customerZip && <p className="text-xs text-muted-foreground">CP {order.customerZip}</p>}
             {order.customerAddress && <p className="flex gap-2.5"><MapPin size={15} className="mt-0.5 shrink-0 text-muted-foreground" />{order.customerAddress}</p>}
             <div><p className="text-xs text-muted-foreground">Pago</p><p className="font-medium">{PAYMENT_NAMES[order.paymentMethod] ?? 'A coordinar'}</p></div>
             {order.notes && <div><p className="text-xs text-muted-foreground">Nota de la clienta</p><p className="mt-0.5 rounded-lg bg-muted p-3">{order.notes}</p></div>}
