@@ -3,7 +3,7 @@
 import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, ImagePlus, Loader2, Star, Trash2, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Copy, ImagePlus, Loader2, Star, Trash2, X } from 'lucide-react'
 import { Badge, Button, Card, Field, Input, PageHeader, Select, SaveBar, Textarea, Toggle, fetcher, money, send } from '@/components/admin/ui'
 import { uploadImages } from '@/components/admin/upload'
 import type { Category, ColorOption, Product } from '@/lib/types'
@@ -26,6 +26,16 @@ const toDraft = (p?: Product): Draft => ({
 
 export function ProductEditor({ product }: { product?: Product }) {
   const router = useRouter()
+  const [duplicating, setDuplicating] = useState(false)
+  // Crea una copia (oculta) con las mismas fotos, talles y colores, para cargar rápido prendas parecidas.
+  async function duplicate() {
+    if (!product) return
+    setDuplicating(true)
+    try {
+      const copy = await send<Product>('/api/catalog', 'POST', { name: `${product.name} (copia)`, description: product.description, category: product.category, price: product.price, oldPrice: product.oldPrice ?? null, badge: product.badge, sku: '', images: product.images, sizes: product.sizes, colors: product.colors, sizeStock: Object.fromEntries(Object.keys(product.sizeStock ?? {}).map(k => [k, 0])), stock: 0, lowStockThreshold: product.lowStockThreshold, active: false, featured: false })
+      router.push(`/admin/productos/${copy.id}`)
+    } catch (err) { setError(err instanceof Error ? err.message : 'No se pudo duplicar') } finally { setDuplicating(false) }
+  }
   const { data: categories } = useSWR<Category[]>('/api/admin/categories', fetcher)
   const [draft, setDraft] = useState<Draft>(() => toDraft(product))
   const initial = useRef(toDraft(product))
@@ -89,7 +99,7 @@ export function ProductEditor({ product }: { product?: Product }) {
 
   return <>
     <PageHeader back={{ href: '/admin/productos', label: 'Productos' }} title={product ? draft.name || 'Producto' : 'Nuevo producto'}
-      actions={<>{product && <a href={`/producto/${product.id}`} target="_blank" rel="noreferrer"><Button size="sm">Ver en la tienda</Button></a>}{product && <Button size="sm" variant="danger" icon={<Trash2 size={14} />} onClick={remove}>Eliminar</Button>}</>} />
+      actions={<>{product && <Button size="sm" icon={<Copy size={14} />} loading={duplicating} onClick={duplicate}>Duplicar</Button>}{product && <a href={`/producto/${product.id}`} target="_blank" rel="noreferrer"><Button size="sm">Ver en la tienda</Button></a>}{product && <Button size="sm" variant="danger" icon={<Trash2 size={14} />} onClick={remove}>Eliminar</Button>}</>} />
 
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="space-y-6">

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import useSWR from 'swr'
 import { useMemo, useState } from 'react'
 import { Eye, EyeOff, LayoutGrid, List, Plus, Search, Shirt, Star } from 'lucide-react'
-import { Badge, ButtonLink, Card, EmptyState, Input, PageHeader, Select, Skeleton, Tabs, fetcher, money, send } from '@/components/admin/ui'
+import { Badge, Button, ButtonLink, Card, EmptyState, Input, PageHeader, Select, Skeleton, Tabs, fetcher, money, send } from '@/components/admin/ui'
 import { productTotalStock, type Product } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { isLowStock } from '@/lib/stock'
@@ -22,6 +22,17 @@ export default function ProductsPage() {
   const [category, setCategory] = useState('')
   const [visibility, setVisibility] = useState<'all' | 'active' | 'hidden'>('all')
   const [view, setView] = useState<'grid' | 'list'>('grid')
+  const [selected, setSelected] = useState<number[]>([])
+  const [busy, setBusy] = useState(false)
+  const toggleSelect = (id: number) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id])
+  async function bulk(action: 'show' | 'hide' | 'delete') {
+    if (action === 'delete' && !window.confirm(`¿Eliminar ${selected.length} producto(s)? No se puede deshacer. Si solo querés sacarlos de la tienda, usá “Ocultar”.`)) return
+    setBusy(true)
+    try {
+      for (const id of selected) await send(`/api/catalog/${id}`, action === 'delete' ? 'DELETE' : 'PATCH', action === 'delete' ? undefined : { active: action === 'show' })
+      setSelected([]); await mutate()
+    } finally { setBusy(false) }
+  }
   const categories = useMemo(() => Array.from(new Set((products ?? []).map(p => p.category).filter(Boolean))), [products])
   const filtered = (products ?? []).filter(p => (!category || p.category === category) && (visibility === 'all' || (visibility === 'active' ? p.active : !p.active)) && `${p.name} ${p.sku}`.toLowerCase().includes(query.toLowerCase()))
 
@@ -41,13 +52,22 @@ export default function ProductsPage() {
       </div>
     </div>
 
+    {selected.length > 0 && <div className="sticky top-16 z-10 mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-primary/20 bg-card p-3 pl-5 shadow-lg lg:top-4">
+      <p className="mr-auto text-sm font-medium">{selected.length} seleccionado(s)</p>
+      <Button size="sm" onClick={() => setSelected(filtered.map(p => p.id))}>Seleccionar todos</Button>
+      <Button size="sm" loading={busy} onClick={() => bulk('show')} icon={<Eye size={14} />}>Publicar</Button>
+      <Button size="sm" loading={busy} onClick={() => bulk('hide')} icon={<EyeOff size={14} />}>Ocultar</Button>
+      <Button size="sm" variant="danger" loading={busy} onClick={() => bulk('delete')}>Eliminar</Button>
+      <Button size="sm" variant="ghost" onClick={() => setSelected([])}>Cancelar</Button>
+    </div>}
     {!products ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="aspect-[3/4] rounded-2xl" />)}</div>
       : !filtered.length ? <Card><EmptyState icon={<Shirt size={20} />} title={products.length ? 'Ningún producto coincide' : 'Todavía no cargaste productos'} description={products.length ? 'Probá con otra búsqueda o filtro.' : 'Empezá cargando tu primera prenda con fotos, talles y stock.'} action={!products.length && <ButtonLink href="/admin/productos/nuevo" variant="primary" icon={<Plus size={16} />}>Cargar producto</ButtonLink>} /></Card>
       : view === 'grid' ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">{filtered.map(product => <div key={product.id} className={cn('group overflow-hidden rounded-2xl border border-border bg-card transition hover:shadow-md', !product.active && 'opacity-60')}>
+        <div className="relative"><label className="absolute top-2 right-2 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md bg-card/95 shadow" title="Seleccionar"><input type="checkbox" checked={selected.includes(product.id)} onChange={() => toggleSelect(product.id)} className="h-4 w-4 accent-[var(--primary)]" aria-label={`Seleccionar ${product.name}`} /></label>
         <Link href={`/admin/productos/${product.id}`} className="relative block aspect-[3/4] overflow-hidden bg-muted">
           {product.image && <img src={product.image} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />}
           <div className="absolute top-2 left-2 flex flex-col gap-1">{!product.active && <Badge>Oculto</Badge>}{product.featured && <Badge tone="brand">★ Destacado</Badge>}</div>
-        </Link>
+        </Link></div>
         <div className="p-3.5">
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{product.category || 'Sin categoría'}</p>
           <Link href={`/admin/productos/${product.id}`} className="mt-0.5 block truncate text-sm font-medium hover:text-primary">{product.name}</Link>

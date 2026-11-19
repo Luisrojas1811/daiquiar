@@ -6,16 +6,17 @@ import { Suspense, useEffect, useState } from 'react'
 import { Check, ChevronDown, CreditCard, Minus, Plus, RefreshCw, Ruler, X } from 'lucide-react'
 import { ProductCard } from '@/components/shop/product-card'
 import { ShippingCalculator } from '@/components/shop/shipping-calculator'
+import { SizeGuideTables } from '@/components/shop/size-guide'
+import { parseSizeGuide } from '@/lib/size-guide'
 import { EMPTY_IMAGE, getStock, isLowQuantity, productImages, slugify, transferPercent, useStore } from '@/components/store'
 import { money, paymentOptions } from '@/lib/pricing'
 import { cn } from '@/lib/utils'
 
-function SizeGuide({ text, onClose }: { text: string; onClose: () => void }) {
+function SizeGuide({ raw, onClose, initial }: { raw: string; onClose: () => void; initial: number }) {
   return <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" role="dialog" aria-modal="true"><div className="absolute inset-0 bg-foreground/40" onClick={onClose} />
-    <div className="relative w-full max-w-lg rounded-t-3xl bg-background p-6 shadow-2xl sm:rounded-3xl">
-      <div className="mb-4 flex items-center justify-between"><h2 className="font-display text-2xl font-semibold text-primary">Guía de talles</h2><button onClick={onClose} aria-label="Cerrar"><X size={22} /></button></div>
-      <p className="mb-4 text-sm text-muted-foreground">Medidas en centímetros. Si estás entre dos talles, te recomendamos el más grande.</p>
-      <div className="divide-y divide-border rounded-xl border border-border">{text.split('\n').filter(Boolean).map(line => { const [size, ...rest] = line.split('·').map(s => s.trim()); return <div key={line} className="flex gap-4 px-4 py-3 text-sm"><b className="w-10 text-primary">{size}</b><span className="text-foreground/80">{rest.join(' · ')}</span></div> })}</div>
+    <div className="animate-rise relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-background p-6 shadow-2xl sm:rounded-3xl">
+      <div className="mb-4 flex items-center justify-between"><h2 className="font-display text-2xl font-semibold text-primary">Guía de talles</h2><button onClick={onClose} aria-label="Cerrar" className="pop"><X size={22} /></button></div>
+      <SizeGuideTables raw={raw} initial={initial} />
     </div>
   </div>
 }
@@ -118,7 +119,7 @@ function ProductView() {
       </div>
     </section>
     {related.length > 0 && <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6"><h2 className="mb-8 text-center font-display text-3xl font-semibold">También te puede gustar</h2><div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4">{related.map(p => <ProductCard key={p.id} product={p} />)}</div></section>}
-    {guide && <SizeGuide text={content.size_guide} onClose={() => setGuide(false)} />}
+    {guide && <SizeGuide raw={content.size_guide_tables} initial={Math.max(0, parseSizeGuide(content.size_guide_tables).tables.findIndex(t => t.rows.some(r => product.sizes.includes(r[0]))))} onClose={() => setGuide(false)} />}
   </>
 }
 

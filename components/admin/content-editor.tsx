@@ -45,7 +45,8 @@ export function ContentEditor({ groups, nav = true }: { groups: readonly string[
   const [error, setError] = useState('')
   useEffect(() => { if (data) { const merged = { ...DEFAULT_CONTENT, ...data }; setValues(merged); setSaved(merged) } }, [data])
 
-  const fields = CONTENT_FIELDS.filter(field => groups.includes(field.group))
+  // Los campos JSON (ej. guía de talles) tienen su propio editor.
+  const fields = CONTENT_FIELDS.filter(field => groups.includes(field.group) && field.type !== 'json')
   const dirtyKeys = fields.filter(field => values[field.key] !== saved[field.key]).map(field => field.key)
 
   async function save() {

@@ -5,7 +5,7 @@ import { ContentEditor } from '@/components/admin/content-editor'
 import { PageHeader } from '@/components/admin/ui'
 import { CONTENT_GROUPS, SETTINGS_GROUPS } from '@/lib/content'
 
-const GROUPS = CONTENT_GROUPS.filter(group => !SETTINGS_GROUPS.includes(group) && group !== 'Contacto y redes')
+const GROUPS = CONTENT_GROUPS.filter(group => !SETTINGS_GROUPS.includes(group) && group !== 'Contacto y redes' && group !== 'Guía de talles')
 
 export default function ContentPage() {
   return <>

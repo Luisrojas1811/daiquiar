@@ -22,6 +22,7 @@ function clean(key: string, raw: unknown): string | null {
   const field = CONTENT_FIELD_BY_KEY[key]
   if (!field || typeof raw !== 'string') return null
   let value = raw.trim()
+  if (field.type === 'json') { if (value.length > 20000) return null; try { JSON.parse(value); return value } catch { return null } }
   if (value.length > 2000) return null
   if (field.type === 'phone') value = value.replace(/\D/g, '')
   if (field.type === 'toggle') return value === '1' ? '1' : '0'

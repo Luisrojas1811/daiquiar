@@ -3,6 +3,7 @@
 import { useStore } from '@/components/store'
 import { money } from '@/lib/pricing'
 import { ShippingCalculator } from '@/components/shop/shipping-calculator'
+import { SizeGuideTables } from '@/components/shop/size-guide'
 
 export default function HelpPage() {
   const { content } = useStore()
@@ -16,7 +17,7 @@ export default function HelpPage() {
     <div id="pagos" className={section}><h2 className={h2}>{content.payments_title}</h2><p className="mt-4 text-foreground/80">{content.payments_text}</p>{Number(content.payment_transfer_discount) > 0 && <p className="mt-2 font-semibold text-primary">{content.payment_transfer_discount}% de descuento pagando por transferencia.</p>}</div>
     <div id="envios" className={section}><h2 className={h2}>{content.shipping_title}</h2><p className="mt-4 text-foreground/80">{content.shipping_text}</p><div className="mt-4"><ShippingCalculator /></div>{Number(content.shipping_free_from) > 0 && <p className="mt-3 text-sm font-semibold text-primary">Envío gratis desde {money(Number(content.shipping_free_from))}.</p>}</div>
     <div id="cambios" className={section}><h2 className={h2}>{content.returns_title}</h2><p className="mt-4 text-foreground/80">{content.returns_text}</p></div>
-    <div id="talles" className={section}><h2 className={h2}>Guía de talles</h2><div className="mt-4 divide-y divide-border rounded-xl border border-border bg-card">{content.size_guide.split('\n').filter(Boolean).map(line => <p key={line} className="px-4 py-3 text-sm">{line}</p>)}</div></div>
+    <div id="talles" className={section}><h2 className={h2}>Guía de talles</h2><div className="mt-4"><SizeGuideTables raw={content.size_guide_tables} /></div></div>
     <div id="faq" className="scroll-mt-28 py-10"><h2 className={h2}>{content.faq_title}</h2><div className="mt-4 space-y-3">{faqs.map(f => <details key={f.q} className="rounded-xl border border-border bg-card px-5 py-4"><summary className="cursor-pointer font-semibold">{f.q}</summary><p className="mt-3 text-foreground/80">{f.a}</p></details>)}</div></div>
   </section>
 }

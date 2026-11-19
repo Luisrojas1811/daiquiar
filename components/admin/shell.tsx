@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import useSWR from 'swr'
 import { FormEvent, useEffect, useState, type ReactNode } from 'react'
-import { Boxes, ExternalLink, FolderTree, Home, LockKeyhole, LogOut, Menu, Palette, Settings, ShoppingBag, Shirt, Tag, Truck, Users, X } from 'lucide-react'
+import { Boxes, ExternalLink, Ruler, FolderTree, Home, LockKeyhole, LogOut, Menu, Palette, Settings, ShoppingBag, Shirt, Tag, Truck, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button, Input, fetcher } from '@/components/admin/ui'
 
@@ -18,6 +18,7 @@ const NAV = [
     { href: '/admin/productos', label: 'Productos', icon: Shirt },
     { href: '/admin/inventario', label: 'Inventario', icon: Boxes, badge: 'low' },
     { href: '/admin/categorias', label: 'Categorías', icon: FolderTree },
+    { href: '/admin/guia-de-talles', label: 'Guía de talles', icon: Ruler },
   ] },
   { section: 'Tienda', items: [
     { href: '/admin/promociones', label: 'Promociones', icon: Tag },

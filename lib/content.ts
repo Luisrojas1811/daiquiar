@@ -2,7 +2,9 @@
 // Para agregar un texto nuevo editable: sumá una entrada acá y usalo con `content.<key>`.
 // El panel Admin se arma solo a partir de esta lista.
 
-export type ContentFieldType = 'text' | 'textarea' | 'image' | 'url' | 'phone' | 'number' | 'toggle'
+import { DEFAULT_SIZE_GUIDE_JSON } from '@/lib/size-guide'
+
+export type ContentFieldType = 'text' | 'textarea' | 'image' | 'url' | 'phone' | 'number' | 'toggle' | 'json'
 
 export type ContentField = {
   key: string
@@ -30,7 +32,7 @@ export const CONTENT_GROUPS = [
 ] as const
 
 // Grupos que se editan desde "Envíos y pagos" en el Admin (el resto, desde "Contenido").
-export const SETTINGS_GROUPS: string[] = ['Envíos', 'Pagos', 'Guía de talles']
+export const SETTINGS_GROUPS: string[] = ['Envíos', 'Pagos']
 
 const G = CONTENT_GROUPS
 
@@ -108,7 +110,7 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'faq_3_answer', group: G[8], type: 'textarea', label: 'Respuesta 3', default: 'Sí, realizamos envíos a todo el país y coordinamos los detalles.' },
 
   // Contacto
-  { key: 'whatsapp_number', group: G[9], type: 'phone', label: 'WhatsApp de la tienda', default: '5491100000000', hint: 'Con código de país y sin signos. Ej.: 5491122334455. Acá llegan los pedidos.' },
+  { key: 'whatsapp_number', group: G[9], type: 'phone', label: 'WhatsApp de la tienda', default: '5491125256023', hint: 'Con 549 + código de área, sin espacios ni signos. Ej.: 5491125256023 (11 2525-6023). Acá llegan los pedidos.' },
   { key: 'instagram_url', group: G[9], type: 'url', label: 'Link de Instagram', default: 'https://instagram.com/daiquiar.indumentaria' },
   { key: 'order_notify_email', group: G[9], type: 'text', label: 'Email donde llegan los pedidos', default: '', hint: 'Cada compra nueva te llega a este email con todo el detalle. Podés poner varios separados por coma.' },
   { key: 'store_location', group: G[9], type: 'text', label: 'Ubicación / showroom', default: 'CABA, Buenos Aires' },
@@ -132,11 +134,12 @@ export const CONTENT_FIELDS: ContentField[] = [
   // Pagos
   { key: 'payment_transfer_enabled', group: G[11], type: 'toggle', label: 'Aceptar transferencia', default: '1' },
   { key: 'payment_transfer_discount', group: G[11], type: 'number', label: 'Descuento por transferencia (%)', default: '10' },
-  { key: 'payment_transfer_details', group: G[11], type: 'textarea', label: 'Datos para transferir', default: 'Te enviamos los datos para transferir por WhatsApp.', hint: 'Se muestran al confirmar el pedido. Poné tu alias, CBU y titular.' },
+  { key: 'payment_transfer_details', group: G[11], type: 'textarea', label: 'Datos para transferir', default: 'Alias: daiana.bertoluzzo (Mercado Pago)', hint: 'Se muestran al confirmar el pedido. Podés sumar CBU/CVU y titular.' },
   { key: 'payment_cash_enabled', group: G[11], type: 'toggle', label: 'Aceptar efectivo', default: '1' },
 
   // Guía de talles
-  { key: 'size_guide', group: G[12], type: 'textarea', label: 'Tabla de talles', default: 'S · Busto 82-86 · Cintura 62-66 · Cadera 88-92\nM · Busto 86-90 · Cintura 66-70 · Cadera 92-96\nL · Busto 90-96 · Cintura 70-76 · Cadera 96-102', hint: 'Una línea por talle. Se muestra en cada producto.' },
+  // Se edita desde el panel → Guía de talles (editor de tablas). Se guarda como JSON.
+  { key: 'size_guide_tables', group: G[12], type: 'json', label: 'Guía de talles', default: DEFAULT_SIZE_GUIDE_JSON },
 ]
 
 export type SiteContent = Record<string, string>
