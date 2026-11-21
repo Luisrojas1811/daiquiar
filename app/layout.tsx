@@ -6,8 +6,12 @@ import '@fontsource/lato/400.css'
 import '@fontsource/lato/700.css'
 import '@fontsource/lato/400-italic.css'
 import './globals.css'
+import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  openGraph: { type: 'website', locale: 'es_AR', siteName: 'Daiquiar Indumentaria', url: SITE_URL },
+  ...(process.env.GOOGLE_SITE_VERIFICATION ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } } : {}),
   title: 'Daiquiar Indumentaria · Moda femenina',
   description: 'Indumentaria femenina seleccionada con amor, con envíos a todo el país.',
   generator: 'v0.app',

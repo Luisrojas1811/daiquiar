@@ -1,3 +1,4 @@
+import { SITE_URL } from '@/lib/site'
 import { PAYMENT_NAMES, SHIPPING_NAMES, money } from '@/lib/pricing'
 import type { AdminOrder } from '@/lib/orders'
 
@@ -15,7 +16,7 @@ export async function sendOrderEmail(order: AdminOrder, to: string, storeName = 
   const line = (label: string, value: string, bold = false) => `<tr><td style="padding:4px 0;color:#7A5A58">${label}</td><td style="padding:4px 0;text-align:right;${bold ? 'font-weight:700;font-size:18px;color:#80011F' : ''}">${value}</td></tr>`
   const info = (label: string, value: string) => value ? `<p style="margin:0 0 6px"><b>${label}:</b> ${esc(value)}</p>` : ''
   const whatsapp = order.customerPhone.replace(/\D/g, '')
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '')
+  const base = SITE_URL
 
   const html = `<div style="font-family:Arial,Helvetica,sans-serif;background:#FDF3E8;padding:24px;color:#351719">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E8D9C6">
