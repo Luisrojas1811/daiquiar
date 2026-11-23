@@ -8,9 +8,18 @@ import '@fontsource/lato/400-italic.css'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://daiquiar.com.ar'),
+  openGraph: {
+    title: 'Daiquiar Indumentaria · Moda femenina',
+    description: 'Bodies, catsuits y conjuntos. 10% OFF por transferencia y envíos a todo el país.',
+    url: 'https://daiquiar.com.ar',
+    siteName: 'Daiquiar',
+    locale: 'es_AR',
+    type: 'website',
+    images: [{ url: '/icon-512.png', width: 512, height: 512, alt: 'Daiquiar' }],
+  },
   title: 'Daiquiar Indumentaria · Moda femenina',
   description: 'Indumentaria femenina seleccionada con amor, con envíos a todo el país.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {
