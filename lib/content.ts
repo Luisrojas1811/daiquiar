@@ -129,7 +129,7 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'instagram_url', group: G[9], type: 'url', label: 'Link de Instagram', default: 'https://instagram.com/daiquiar.indumentaria' },
   // Pasos de "Puesta en marcha" que la dueña marcó como listos (lo maneja el panel).
   { key: 'setup_done', group: G[9], type: 'json', label: 'Puesta en marcha', default: '[]' },
-  { key: 'order_notify_email', group: G[9], type: 'text', label: 'Email donde llegan los pedidos', default: '', hint: 'Cada compra nueva te llega a este email con todo el detalle. Podés poner varios separados por coma.' },
+  { key: 'order_notify_email', group: G[9], type: 'text', label: 'Email donde llegan los pedidos', default: 'daiquiarr@gmail.com', hint: 'Cada compra nueva te llega a este email con todo el detalle. Podés poner varios separados por coma.' },
   { key: 'store_location', group: G[9], type: 'text', label: 'Ubicación / showroom', default: 'CABA, Buenos Aires' },
 
   // Envíos
