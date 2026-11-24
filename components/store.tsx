@@ -4,7 +4,7 @@ import Link from 'next/link'
 import useSWR from 'swr'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { ChevronRight, Menu, Minus, Plus, Search, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
+import { Minus, Plus, Search, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
 import { DEFAULT_CONTENT, type SiteContent } from '@/lib/content'
 import { computeTotals, money } from '@/lib/pricing'
 import type { Category, Product } from '@/lib/types'
@@ -128,16 +128,14 @@ export function Logo({ className = '' }: { className?: string }) { return <Link 
 
 function Header() {
   const { categories, count, setCartOpen, content, search, setSearch } = useStore()
-  const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  useEffect(() => { setMenuOpen(false); setSearchOpen(false) }, [pathname])
+  useEffect(() => { setSearchOpen(false) }, [pathname])
   const submitSearch = () => { setSearchOpen(false); router.push(`/productos${search ? `?q=${encodeURIComponent(search)}` : ''}`) }
   return <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
     <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6">
       <div className="flex items-center gap-1">
-        <button className="pop -ml-2 rounded-full p-2 lg:hidden" aria-label="Abrir menú" onClick={() => setMenuOpen(true)}><Menu size={21} /></button>
         <nav className="hidden items-center gap-6 text-[13px] font-semibold uppercase tracking-wider lg:flex">
           <Link href="/productos" className="hover:text-primary">{content.nav_new_label}</Link>
           {categories.slice(0, 5).map(c => <Link key={c.id} href={`/categoria/${c.slug}`} className="hover:text-primary">{c.name}</Link>)}
@@ -154,16 +152,6 @@ function Header() {
       </div>
     </div>
     {searchOpen && <form onSubmit={e => { e.preventDefault(); submitSearch() }} className="border-t border-border bg-background px-4 py-3"><div className="mx-auto flex max-w-2xl items-center gap-3 rounded-full border border-border bg-card px-4"><Search size={17} className="text-muted-foreground" /><input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder={content.search_placeholder} className="h-11 w-full bg-transparent text-sm outline-none" /><button className="text-sm font-semibold text-primary">Buscar</button></div></form>}
-    {menuOpen && <div className="fixed inset-0 z-50 lg:hidden"><div className="absolute inset-0 bg-foreground/40" onClick={() => setMenuOpen(false)} />
-      <nav className="absolute inset-y-0 left-0 flex w-[85%] max-w-sm flex-col bg-background shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4"><Logo className="text-xl" /><button onClick={() => setMenuOpen(false)} aria-label="Cerrar menú"><X size={22} /></button></div>
-        <div className="flex-1 overflow-y-auto px-5 py-2 text-[15px] font-medium">
-          <Link href="/productos" className="flex items-center justify-between border-b border-border py-4">{content.nav_new_label}<ChevronRight size={17} className="text-muted-foreground" /></Link>
-          {categories.map(c => <Link key={c.id} href={`/categoria/${c.slug}`} className="flex items-center justify-between border-b border-border py-4">{c.name}<ChevronRight size={17} className="text-muted-foreground" /></Link>)}
-          <Link href="/ayuda" className="flex items-center justify-between border-b border-border py-4">Ayuda · envíos y cambios<ChevronRight size={17} className="text-muted-foreground" /></Link>
-        </div>
-      </nav>
-    </div>}
   </header>
 }
 
