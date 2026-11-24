@@ -121,7 +121,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 @keyframes rise { from { transform: translateY(18px); opacity: .001; } to { transform: none; opacity: 1; } }
 .animate-rise { animation: rise .7s var(--spring) both; }
 
+/* Cambio de página suave: el contenido nuevo entra con un fundido hacia arriba. */
+@keyframes page-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.animate-page { animation: page-in .55s cubic-bezier(.22, 1, .36, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
+  .animate-page { animation: none !important; }
   .pop, .pop-soft, .lift, .shine::after { transition: none !important; }
   .pop:hover, .pop-soft:hover, .lift:hover { transform: none !important; }
   .animate-bump, .animate-pop-in, .animate-ring, .animate-rise { animation: none !important; }

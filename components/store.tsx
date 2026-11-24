@@ -162,9 +162,26 @@ function Header() {
 }
 
 // Menú lateral del celular: se desliza desde la izquierda sobre toda la pantalla.
+// Menú lateral del celular. Entra y sale deslizándose (no aparece ni desaparece de golpe):
+// queda montado mientras dura la animación de salida y las opciones aparecen en cascada.
+const MENU_MS = 420
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { categories, content } = useStore()
   const pathname = usePathname()
+  const [mounted, setMounted] = useState(false)
+  const [shown, setShown] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true)
+      const frame = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)))
+      return () => cancelAnimationFrame(frame)
+    }
+    setShown(false)
+    const timer = setTimeout(() => setMounted(false), MENU_MS)
+    return () => clearTimeout(timer)
+  }, [open])
+
   useEffect(() => {
     if (!open) return
     document.body.style.overflow = 'hidden'
@@ -172,16 +189,21 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
     window.addEventListener('keydown', onKey)
     return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', onKey) }
   }, [open, onClose])
-  if (!open) return null
+
+  if (!mounted) return null
+  const ease = 'cubic-bezier(.22,1,.36,1)'
+  let index = 0
+  // Cada opción entra un poquito después de la anterior.
+  const stagger = () => ({ transition: `opacity 420ms ${ease}, transform 420ms ${ease}`, transitionDelay: shown ? `${120 + index++ * 45}ms` : '0ms', opacity: shown ? 1 : 0, transform: shown ? 'none' : 'translateX(-14px)' })
   const item = (href: string, label: string, icon?: ReactNode) => {
     const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
-    return <Link key={href} href={href} onClick={onClose} className={`flex items-center gap-3 border-b border-border py-4 text-[15px] font-semibold uppercase tracking-[0.12em] transition ${active ? 'text-primary' : 'hover:text-primary'}`}>
+    return <Link key={href} href={href} onClick={onClose} style={stagger()} className={`flex items-center gap-3 border-b border-border py-4 text-[15px] font-semibold uppercase tracking-[0.12em] ${active ? 'text-primary' : 'hover:text-primary'}`}>
       {icon}<span className="flex-1">{label}</span><ChevronRight size={17} className="text-muted-foreground" />
     </Link>
   }
-  return <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true" aria-label="Menú">
-    <div className="absolute inset-0 bg-foreground/45 animate-in fade-in duration-200" onClick={onClose} />
-    <nav className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-background shadow-2xl animate-in slide-in-from-left duration-300">
+  return <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true" aria-label="Menú" aria-hidden={!open}>
+    <div onClick={onClose} className="absolute inset-0 bg-foreground/40 backdrop-blur-[2px]" style={{ transition: `opacity ${MENU_MS}ms ${ease}`, opacity: shown ? 1 : 0 }} />
+    <nav className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-background shadow-2xl" style={{ transition: `transform ${MENU_MS}ms ${ease}`, transform: shown ? 'translateX(0)' : 'translateX(-102%)' }}>
       <div className="flex items-center justify-between border-b border-border px-5 py-4" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
         <Logo className="text-xl" />
         <button onClick={onClose} aria-label="Cerrar menú" className="pop rounded-full p-2 hover:bg-secondary"><X size={22} /></button>
@@ -189,15 +211,16 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
       <div className="flex-1 overflow-y-auto px-5">
         {item('/', 'Inicio', <Home size={18} className="text-primary" />)}
         {item('/productos', content.nav_new_label, <Sparkles size={18} className="text-primary" />)}
-        <p className="pt-6 pb-1 text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Categorías</p>
+        <p style={stagger()} className="pt-6 pb-1 text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Categorías</p>
         {categories.map(c => item(`/categoria/${c.slug}`, c.name))}
-        <p className="pt-6 pb-1 text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Ayuda</p>
+        <p style={stagger()} className="pt-6 pb-1 text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Ayuda</p>
         {item('/ayuda', 'Envíos, pagos y cambios', <HelpCircle size={18} className="text-primary" />)}
       </div>
-      <div className="flex gap-3 border-t border-border px-5 py-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+      <div style={stagger()} className="flex gap-3 border-t border-border px-5 py-4" >
         <a href={content.instagram_url} target="_blank" rel="noreferrer" className="pop flex flex-1 items-center justify-center gap-2 rounded-full border border-border py-3 text-sm font-semibold"><InstagramIcon size={18} />Instagram</a>
         <a href={`https://wa.me/${content.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="pop flex flex-1 items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 text-sm font-semibold text-white"><WhatsAppIcon size={18} />WhatsApp</a>
       </div>
+      <div style={{ height: 'env(safe-area-inset-bottom)' }} />
     </nav>
   </div>
 }
@@ -272,7 +295,7 @@ export function Shell({ children }: { children: ReactNode }) {
   return <main className="min-h-screen bg-background text-foreground">
     <Marquee text={content.marquee_text} />
     <Header />
-    {children}
+    <div key={pathname} className="animate-page">{children}</div>
     <Footer />
     <CartDrawer />
     <a href={`https://wa.me/${content.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" aria-label="Escribinos por WhatsApp" className="pop animate-ring fixed right-4 bottom-4 z-40 flex h-13 w-13 items-center justify-center rounded-full bg-[#25D366] p-3 text-white shadow-lg"><WhatsAppIcon size={26} /></a>
