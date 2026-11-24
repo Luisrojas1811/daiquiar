@@ -4,7 +4,7 @@ import Link from 'next/link'
 import useSWR from 'swr'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Minus, Plus, Search, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
+import { ChevronRight, HelpCircle, Home, Menu, Minus, Sparkles, Plus, Search, ShoppingCart, Trash2, Truck, X } from 'lucide-react'
 import { DEFAULT_CONTENT, type SiteContent } from '@/lib/content'
 import { computeTotals, money } from '@/lib/pricing'
 import type { Category, Product } from '@/lib/types'
@@ -129,13 +129,17 @@ export function Logo({ className = '' }: { className?: string }) { return <Link 
 function Header() {
   const { categories, count, setCartOpen, content, search, setSearch } = useStore()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  useEffect(() => { setSearchOpen(false) }, [pathname])
+  useEffect(() => { setSearchOpen(false); setMenuOpen(false) }, [pathname])
   const submitSearch = () => { setSearchOpen(false); router.push(`/productos${search ? `?q=${encodeURIComponent(search)}` : ''}`) }
-  return <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+  // El menú va FUERA del <header>: el desenfoque (backdrop-blur) del header encerraba al menú y no se veía.
+  return <>
+  <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
     <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6">
       <div className="flex items-center gap-1">
+        <button className="pop -ml-2 rounded-full p-2 hover:bg-secondary lg:hidden" aria-label="Abrir menú" aria-expanded={menuOpen} onClick={() => setMenuOpen(true)}><Menu size={22} /></button>
         <nav className="hidden items-center gap-6 text-[13px] font-semibold uppercase tracking-wider lg:flex">
           <Link href="/productos" className="hover:text-primary">{content.nav_new_label}</Link>
           {categories.slice(0, 5).map(c => <Link key={c.id} href={`/categoria/${c.slug}`} className="hover:text-primary">{c.name}</Link>)}
@@ -153,6 +157,49 @@ function Header() {
     </div>
     {searchOpen && <form onSubmit={e => { e.preventDefault(); submitSearch() }} className="border-t border-border bg-background px-4 py-3"><div className="mx-auto flex max-w-2xl items-center gap-3 rounded-full border border-border bg-card px-4"><Search size={17} className="text-muted-foreground" /><input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder={content.search_placeholder} className="h-11 w-full bg-transparent text-sm outline-none" /><button className="text-sm font-semibold text-primary">Buscar</button></div></form>}
   </header>
+  <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+  </>
+}
+
+// Menú lateral del celular: se desliza desde la izquierda sobre toda la pantalla.
+function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { categories, content } = useStore()
+  const pathname = usePathname()
+  useEffect(() => {
+    if (!open) return
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', onKey) }
+  }, [open, onClose])
+  if (!open) return null
+  const item = (href: string, label: string, icon?: ReactNode) => {
+    const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
+    return <Link key={href} href={href} onClick={onClose} className={`flex items-center gap-3 border-b border-border py-4 text-[15px] font-semibold uppercase tracking-[0.12em] transition ${active ? 'text-primary' : 'hover:text-primary'}`}>
+      {icon}<span className="flex-1">{label}</span><ChevronRight size={17} className="text-muted-foreground" />
+    </Link>
+  }
+  return <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true" aria-label="Menú">
+    <div className="absolute inset-0 bg-foreground/45 animate-in fade-in duration-200" onClick={onClose} />
+    <nav className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-background shadow-2xl animate-in slide-in-from-left duration-300">
+      <div className="flex items-center justify-between border-b border-border px-5 py-4" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
+        <Logo className="text-xl" />
+        <button onClick={onClose} aria-label="Cerrar menú" className="pop rounded-full p-2 hover:bg-secondary"><X size={22} /></button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5">
+        {item('/', 'Inicio', <Home size={18} className="text-primary" />)}
+        {item('/productos', content.nav_new_label, <Sparkles size={18} className="text-primary" />)}
+        <p className="pt-6 pb-1 text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Categorías</p>
+        {categories.map(c => item(`/categoria/${c.slug}`, c.name))}
+        <p className="pt-6 pb-1 text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground">Ayuda</p>
+        {item('/ayuda', 'Envíos, pagos y cambios', <HelpCircle size={18} className="text-primary" />)}
+      </div>
+      <div className="flex gap-3 border-t border-border px-5 py-4" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+        <a href={content.instagram_url} target="_blank" rel="noreferrer" className="pop flex flex-1 items-center justify-center gap-2 rounded-full border border-border py-3 text-sm font-semibold"><InstagramIcon size={18} />Instagram</a>
+        <a href={`https://wa.me/${content.whatsapp_number.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="pop flex flex-1 items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 text-sm font-semibold text-white"><WhatsAppIcon size={18} />WhatsApp</a>
+      </div>
+    </nav>
+  </div>
 }
 
 function Footer() {
