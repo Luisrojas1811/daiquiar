@@ -290,6 +290,9 @@ export function Shell({ children }: { children: ReactNode }) {
   const { content } = useStore()
   const pathname = usePathname()
   const checkout = pathname.startsWith('/checkout')
+  // Cada página nueva arranca desde arriba (antes quedaba a la altura de la página anterior,
+  // por ejemplo "Descubrir" llevaba al pie de "Ver todo"). Si el link trae un #ancla, se respeta.
+  useEffect(() => { if (!window.location.hash) window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior }) }, [pathname])
   // En el checkout se ocultan menú y footer para que la clienta no se distraiga (igual que Tiendanube).
   if (checkout) return <main className="min-h-screen bg-background text-foreground">{children}</main>
   return <main className="min-h-screen bg-background text-foreground">
