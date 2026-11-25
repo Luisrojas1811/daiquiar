@@ -37,7 +37,9 @@ export default function HomePage() {
   const latest = products.slice(0, 8)
   const freeFrom = Number(content.shipping_free_from) || 0
   const transfer = transferPercent(content)
-  const igImages = products.flatMap(p => productImages(p).slice(0, 1)).slice(0, 6)
+  // Fotos de Instagram cargadas desde el panel; si no hay, se usan fotos de productos.
+  const igManual = [1, 2, 3, 4, 5, 6].map(n => content[`instagram_photo_${n}`]).filter(Boolean)
+  const igImages = (igManual.length ? igManual : products.flatMap(p => productImages(p).slice(0, 1))).slice(0, 6)
   const instagramHandle = content.instagram_url.replace(/\/$/, '').split('/').pop()
 
   // Barra de beneficios: textos desde el panel; {envio_gratis} y {descuento} se completan solos.
@@ -97,7 +99,7 @@ export default function HomePage() {
     {igImages.length > 0 && content.instagram_title.trim() && <section className="border-t border-border bg-card py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-8 flex flex-col items-center gap-3 text-center"><InstagramIcon size={28} /><h2 className="font-display text-2xl font-semibold md:text-3xl">{content.instagram_title}</h2><a href={content.instagram_url} target="_blank" rel="noreferrer" className="text-sm font-bold text-primary">@{instagramHandle}</a></div>
-        <div className="grid grid-cols-3 gap-2 md:grid-cols-6">{igImages.map((src, i) => <a key={i} href={content.instagram_url} target="_blank" rel="noreferrer" className="pop group relative aspect-square overflow-hidden rounded-xl"><img src={src} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" /><span className="absolute inset-0 flex items-center justify-center bg-primary/0 text-primary-foreground opacity-0 transition group-hover:bg-primary/50 group-hover:opacity-100"><InstagramIcon size={24} /></span></a>)}</div>
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-6">{igImages.map((src, i) => <a key={i} href={content.instagram_url} target="_blank" rel="noreferrer" className="pop group relative aspect-square overflow-hidden rounded-xl"><img src={src} onError={e => { const tile = e.currentTarget.closest('a'); if (tile) tile.style.display = 'none' }} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" /><span className="absolute inset-0 flex items-center justify-center bg-primary/0 text-primary-foreground opacity-0 transition group-hover:bg-primary/50 group-hover:opacity-100"><InstagramIcon size={24} /></span></a>)}</div>
       </div>
     </section>}
   </>
