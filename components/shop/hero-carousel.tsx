@@ -45,7 +45,7 @@ export function HeroCarousel({ products }: { products: Product[] }) {
             </div>
             <div className="relative order-1 md:order-2">
               <div className="absolute -inset-3 rounded-[2.5rem] border border-primary-foreground/25 md:-inset-5" />
-              <img src={content.hero_image} alt="Nueva colección Daiquiar" className="relative h-[340px] w-full rounded-[2rem] object-cover shadow-2xl md:h-[480px]" />
+              <img src={content.hero_image} alt="Nueva colección Daiquiar" className="relative h-[420px] w-full rounded-[2rem] object-cover object-[50%_15%] shadow-2xl md:h-[480px]" />
             </div>
           </div>
         </div>
@@ -64,8 +64,8 @@ export function HeroCarousel({ products }: { products: Product[] }) {
               <Link href={`/producto/${product.id}`} tabIndex={i === index ? 0 : -1} className={cn('pop shine mt-8 inline-flex items-center gap-3 rounded-full px-8 py-4 text-xs font-bold uppercase tracking-[0.2em]', i % 2 === 0 ? 'bg-primary-foreground text-primary hover:bg-secondary' : 'bg-primary text-primary-foreground hover:brightness-110')}>{content.carousel_cta || 'Ver producto'} <ArrowRight size={16} /></Link>
             </div>
             <Link href={`/producto/${product.id}`} tabIndex={-1} className="relative order-1 grid grid-cols-[1.4fr_1fr] gap-3 md:order-2">
-              <img src={images[0] || EMPTY_IMAGE} alt={product.name} className="h-[340px] w-full rounded-[2rem] object-cover shadow-2xl md:h-[480px]" />
-              <img src={images[1] || images[0] || EMPTY_IMAGE} alt="" className="mt-10 h-[280px] w-full rounded-[2rem] object-cover shadow-xl md:h-[400px]" />
+              <img src={images[0] || EMPTY_IMAGE} alt={product.name} className="h-[340px] w-full rounded-[2rem] object-cover object-[50%_15%] shadow-2xl md:h-[480px]" />
+              <img src={images[1] || images[0] || EMPTY_IMAGE} alt="" className="mt-10 h-[280px] w-full rounded-[2rem] object-cover object-[50%_15%] shadow-xl md:h-[400px]" />
             </Link>
           </div>
         </div>

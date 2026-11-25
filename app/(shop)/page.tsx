@@ -59,7 +59,7 @@ export default function HomePage() {
       <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">{categories.map(category => {
         const cover = category.image || productImages(products.find(p => p.category === category.name) ?? ({ images: [], image: '' } as unknown as Product))[0] || EMPTY_IMAGE
         return <Link key={category.id} href={`/categoria/${category.slug}`} className="lift group relative aspect-[3/4] w-[72%] shrink-0 snap-start overflow-hidden rounded-3xl bg-secondary hover:shadow-2xl sm:w-auto">
-          <img src={cover} alt={category.name} className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+          <img src={cover} alt={category.name} className="absolute inset-0 h-full w-full object-cover object-[50%_15%] transition duration-700 group-hover:scale-105" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#351719]/85 via-[#351719]/10 to-transparent" />
           <div className="absolute inset-3 rounded-[1.25rem] border border-[#FDF3E8]/40 transition group-hover:inset-4" />
           <div className="absolute inset-x-0 bottom-0 p-7 text-center text-[#FDF3E8]"><h3 className="font-display text-3xl font-semibold">{category.name}</h3><span className="mt-3 inline-flex items-center gap-2 border-b border-[#FDF3E8]/60 pb-1 text-[11px] font-bold uppercase tracking-[0.3em]">{content.category_card_cta} <ArrowRight size={13} /></span></div>
@@ -76,7 +76,7 @@ export default function HomePage() {
     {/* 5 · Banner editorial */}
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
       <div className="grid overflow-hidden rounded-[2rem] bg-primary text-primary-foreground md:grid-cols-2">
-        <img src={content.banner_image || content.hero_image} alt="" className="h-72 w-full object-cover md:h-full" />
+        <img src={content.banner_image || content.hero_image} alt="" className="aspect-[4/5] w-full object-cover object-[50%_15%] sm:aspect-auto sm:h-96 md:h-full md:min-h-[520px]" />
         <div className="flex flex-col justify-center p-10 md:p-16">
           <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-primary-foreground/70">{content.banner_eyebrow}</p>
           <h2 className="mt-4 font-display text-4xl leading-tight font-semibold md:text-5xl">{content.banner_title}</h2>

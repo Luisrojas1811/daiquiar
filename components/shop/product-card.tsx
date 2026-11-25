@@ -25,8 +25,8 @@ export function ProductCard({ product, className }: { product: Product; classNam
   return <article className={cn('lift group relative min-w-0', className)}>
     <div className="lift-shadow relative aspect-[3/4] overflow-hidden rounded-2xl bg-secondary">
       <Link href={`/producto/${product.id}${color ? `?color=${encodeURIComponent(color)}` : ''}`} className="absolute inset-0" aria-label={product.name}>
-        <img src={main || EMPTY_IMAGE} alt={product.name} className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.1]" loading="lazy" />
-        {hover && <img src={hover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-500 group-hover:opacity-100" loading="lazy" />}
+        <img src={main || EMPTY_IMAGE} alt={product.name} className="absolute inset-0 h-full w-full object-cover object-[50%_15%] transition duration-700 group-hover:scale-[1.1]" loading="lazy" />
+        {hover && <img src={hover} alt="" className="absolute inset-0 h-full w-full object-cover object-[50%_15%] opacity-0 transition duration-500 group-hover:opacity-100" loading="lazy" />}
       </Link>
       <div className="pointer-events-none absolute top-3 left-3 flex flex-col items-start gap-1.5">
         {units === 0 ? <span className="rounded-full bg-foreground/85 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-background">{content.out_of_stock_label}</span> : <>
