@@ -55,12 +55,12 @@ export const CONTENT_FIELDS: ContentField[] = [
   { key: 'banner_text', group: G[1], type: 'textarea', label: 'Banner bordó · texto', default: 'Prendas pensadas para que te sientas increíble, todos los días.' },
   { key: 'banner_cta', group: G[1], type: 'text', label: 'Banner bordó · botón', default: 'Descubrir' },
   { key: 'instagram_title', group: G[1], type: 'text', label: 'Título de la sección de Instagram', default: 'Seguinos en Instagram', hint: 'Si lo dejás vacío, la sección se oculta.' },
-  { key: 'instagram_photo_1', group: G[1], type: 'image', label: 'Instagram · foto 1', default: '/instagram/1.jpg', hint: "Las 6 fotos de la sección “Seguinos en Instagram”. Cada una lleva al perfil." },
-  { key: 'instagram_photo_2', group: G[1], type: 'image', label: 'Instagram · foto 2', default: '/instagram/2.jpg' },
-  { key: 'instagram_photo_3', group: G[1], type: 'image', label: 'Instagram · foto 3', default: '/instagram/3.jpg' },
-  { key: 'instagram_photo_4', group: G[1], type: 'image', label: 'Instagram · foto 4', default: '/instagram/4.jpg' },
-  { key: 'instagram_photo_5', group: G[1], type: 'image', label: 'Instagram · foto 5', default: '/instagram/5.jpg' },
-  { key: 'instagram_photo_6', group: G[1], type: 'image', label: 'Instagram · foto 6', default: '/instagram/6.jpg' },
+  { key: 'instagram_photo_1', group: G[1], type: 'image', label: 'Instagram · foto 1', default: '', hint: "Las 6 fotos de la sección “Seguinos en Instagram”. Cada una lleva al perfil." },
+  { key: 'instagram_photo_2', group: G[1], type: 'image', label: 'Instagram · foto 2', default: '' },
+  { key: 'instagram_photo_3', group: G[1], type: 'image', label: 'Instagram · foto 3', default: '' },
+  { key: 'instagram_photo_4', group: G[1], type: 'image', label: 'Instagram · foto 4', default: '' },
+  { key: 'instagram_photo_5', group: G[1], type: 'image', label: 'Instagram · foto 5', default: '' },
+  { key: 'instagram_photo_6', group: G[1], type: 'image', label: 'Instagram · foto 6', default: '' },
 
   // Menú
   { key: 'nav_new_label', group: G[2], type: 'text', label: 'Link del menú hacia los productos nuevos', default: 'Nuevos ingresos' },
